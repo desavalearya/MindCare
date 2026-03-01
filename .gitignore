@@ -1,0 +1,57 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Node.js
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Environment files (do not commit secrets)
+.env
+.env.*
+des/.env
+
+# Python
+__pycache__/
+*.py[cod]
+des/__pycache__/
+des/*.pyc
+des/.pytest_cache/
+
+# Editors/OS
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+
+# Build artifacts
+*.tsbuildinfo
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

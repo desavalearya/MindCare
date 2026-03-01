@@ -1,0 +1,6 @@
+Connecting to MySQL { host: 'localhost', port: 3306, user: 'root', hasPassword: true }
+Auth API listening on http://127.0.0.1:8083
+Login attempt: email=vidhiH@gmail.com, role=user
+Login success: vidhiH@gmail.com
+Login attempt: email=vidhiH@gmail.com, role=user
+Login success: vidhiH@gmail.com
