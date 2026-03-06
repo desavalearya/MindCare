@@ -9,42 +9,73 @@ import Navbar from "@/components/Navbar";
 import { motion } from "framer-motion";
 import { Heart, User, Stethoscope, Shield } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { signInWithEmailPassword } from "@/lib/apiAuth";
+// TODO: Switch to Cognito once AWS is set up
+// import { cognitoSignIn, getCognitoUserAttributes } from "@/lib/cognito-auth";
+import { tempSignIn, getTempUserAttributes } from "@/lib/tempAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef } from "react";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<'user' | 'counsellor' | 'admin'>('user');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useUser();
   const { toast } = useToast();
-  const googleBtnRef = useRef<HTMLDivElement | null>(null);
-
-  // Google sign-in removed; email/password only
-  useEffect(() => {}, [selectedRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      const auth = await signInWithEmailPassword(email, password, selectedRole);
-      const name = auth.displayName || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
+      // TODO: Switch to Cognito
+      // const result = await cognitoSignIn({ email, password });
+      const result = await tempSignIn({ email, password });
 
-      login({ name, email: auth.email, role: selectedRole });
+      if (result.success && result.user) {
+        // TODO: Switch to Cognito
+        // const attributes = await getCognitoUserAttributes();
+        const attributes = await getTempUserAttributes();
+        
+        if (!attributes) {
+          throw new Error('Could not retrieve user attributes');
+        }
 
-      toast({
-        title: "Welcome back!",
-        description: `Signed in successfully as ${selectedRole}`,
-      });
+        // Check if role matches
+        if (attributes.role !== selectedRole) {
+          toast({
+            title: "Role mismatch",
+            description: `This account is registered as ${attributes.role}, not ${selectedRole}`,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
 
-      navigate(`/dashboard/${selectedRole}`);
+        login({
+          userId: result.user.userId,
+          name: attributes.name,
+          email: attributes.email,
+          role: attributes.role as 'user' | 'counsellor' | 'admin',
+        });
+
+        toast({
+          title: "Welcome back!",
+          description: `Signed in successfully as ${attributes.role}`,
+        });
+
+        navigate(`/dashboard/${attributes.role}`);
+      } else {
+        throw new Error('Sign in failed');
+      }
     } catch (err: any) {
       toast({
         title: "Sign in failed",
         description: err?.message || "Invalid credentials",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,14 +95,10 @@ const SignIn = () => {
               <Heart className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
-            <p className="text-muted-foreground">We're glad to see you again</p>
+            <p className="text-muted-foreground">Sign in to continue</p>
           </div>
 
           <Card className="p-8 shadow-soft border-border bg-card">
-            {/* Email sign-in */}
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">Sign in with Email</p>
-            </div>
             <Tabs value={selectedRole} onValueChange={(v) => setSelectedRole(v as any)} className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="user" className="flex items-center gap-2">
@@ -82,7 +109,6 @@ const SignIn = () => {
                   <Stethoscope className="w-4 h-4" />
                   Counsellor
                 </TabsTrigger>
-                {/* Admin sign-in allowed but admin sign-up removed; still keep admin tab for sign-in */}
                 <TabsTrigger value="admin" className="flex items-center gap-2">
                   <Shield className="w-4 h-4" />
                   Admin
@@ -101,6 +127,7 @@ const SignIn = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        disabled={loading}
                         className="border-input"
                       />
                     </div>
@@ -114,32 +141,26 @@ const SignIn = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={loading}
                         className="border-input"
                       />
                     </div>
 
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary/90 transition-smooth">
-                      Sign In as {role.charAt(0).toUpperCase() + role.slice(1)}
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-primary hover:bg-primary/90 transition-smooth"
+                      disabled={loading}
+                    >
+                      {loading ? 'Signing in...' : `Sign In as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
                     </Button>
                   </form>
                 </TabsContent>
               ))}
             </Tabs>
-            <div className="mt-6">
-              <Button
-                type="button"
-                className="w-full bg-secondary hover:bg-secondary/90 transition-smooth"
-                onClick={() => {
-                  window.location.href = '/auth/google';
-                }}
-              >
-                Sign in with Google Fit
-              </Button>
-            </div>
-            {/* Link to Sign Up */}
+
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              New to MindMate?{" "}
-              <Link to="/auth/signup" className="text-primary hover:underline font-medium" aria-label="Go to Sign up">
+              New to MindCare?{" "}
+              <Link to="/auth/signup" className="text-primary hover:underline font-medium">
                 Sign up
               </Link>
             </div>

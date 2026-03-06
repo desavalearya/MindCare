@@ -5,53 +5,118 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
 # Node.js
 node_modules/
 dist/
+dist-ssr/
 .vite/
 coverage/
+*.local
 
-# Environment files (do not commit secrets)
+# Environment files (CRITICAL - do not commit secrets!)
 .env
 .env.*
+.env.local
+.env.development
+.env.production
+.env.test
+server/.env
+server/.env.*
 des/.env
+
+# AWS Credentials and Sensitive Files
+aws-credentials.json
+credentials.json
+*-credentials.json
+*.pem
+*.key
+*.cert
+
+# Lambda Deployment Packages
+lambda-functions/*.zip
+lambda-functions/node_modules/
+*.zip
+
+# Database
+*.sql.backup
+*.db
+*.sqlite
+*.sqlite3
 
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
 des/__pycache__/
 des/*.pyc
 des/.pytest_cache/
+venv/
+env/
+ENV/
 
 # Editors/OS
 .DS_Store
 Thumbs.db
 *.swp
-.vscode/
-
-# Build artifacts
-*.tsbuildinfo
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+*.swo
+*~
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+!.vscode/settings.json
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Build artifacts
+*.tsbuildinfo
+build/
+out/
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+
+# Lock files (optional - uncomment if you want to ignore)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Bun
+bun.lockb
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# Kiro (keep these for project management)
+# .kiro/
+
+# Documentation that contains sensitive info (if any)
+# Uncomment if you have docs with credentials
+# *CREDENTIALS*.md
+# *SECRETS*.md

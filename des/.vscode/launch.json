@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Chatbot",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/chatbot_app.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env",
+      "args": []
+    },
+    {
+      "name": "Run Chatbot (Text)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/chatbot_app.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env",
+      "args": ["--text"]
+    },
+    {
+      "name": "Run Chatbot (Voice)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/chatbot_app.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env",
+      "args": ["--voice"]
+    }
+  ]
+}

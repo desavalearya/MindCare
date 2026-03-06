@@ -1,66 +1,77 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+// TODO: Switch back to Cognito once AWS is set up
+// import { getCognitoCurrentUser, getCognitoUserAttributes, cognitoSignOut } from '@/lib/cognito-auth';
+import { getTempCurrentUser, getTempUserAttributes, tempSignOut } from '@/lib/tempAuth';
 
 interface UserData {
   name: string;
   role: 'user' | 'counsellor' | 'admin';
   email: string;
+  userId?: string;
 }
 
 interface UserContextType {
   user: UserData | null;
   login: (userData: UserData) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
+  loading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Prefer new MindMate key, but gracefully fall back to old MindCare key
-    const storedUserNew = localStorage.getItem('mindmate_user');
-    const storedUserOld = localStorage.getItem('mindcare_user');
-    const storedUser = storedUserNew || storedUserOld;
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Check for existing session on mount
+    const checkAuth = async () => {
+      try {
+        // TODO: Switch to Cognito
+        // const currentUser = await getCognitoCurrentUser();
+        const currentUser = await getTempCurrentUser();
+        
+        if (currentUser) {
+          // TODO: Switch to Cognito
+          // const attributes = await getCognitoUserAttributes();
+          const attributes = await getTempUserAttributes();
+          
+          if (attributes) {
+            setUser({
+              userId: currentUser.userId,
+              name: attributes.name,
+              email: attributes.email,
+              role: attributes.role as 'user' | 'counsellor' | 'admin',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = (userData: UserData) => {
     setUser(userData);
-    localStorage.setItem('mindmate_user', JSON.stringify(userData));
-    // Maintain role-based registries locally to keep separate entries
-    try {
-      const key =
-        userData.role === 'user'
-          ? 'mindmate_registry_user'
-          : userData.role === 'counsellor'
-          ? 'mindmate_registry_counsellor'
-          : 'mindmate_registry_admin';
-      const existingRaw = localStorage.getItem(key);
-      const existing: Array<{ name: string; email: string }> = existingRaw ? JSON.parse(existingRaw) : [];
-      const already = existing.some((e) => e.email === userData.email);
-      const updated = already ? existing : [...existing, { name: userData.name, email: userData.email }];
-      localStorage.setItem(key, JSON.stringify(updated));
-    } catch {}
   };
 
-  const logout = () => {
-    setUser(null);
-    // Clear both new and legacy keys
-    localStorage.removeItem('mindmate_user');
-    localStorage.removeItem('mindcare_user');
-    // Also clear Google auto-select to avoid immediate re-login
+  const logout = async () => {
     try {
-      // Disable auto-select session
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any)?.google?.accounts?.id?.disableAutoSelect?.();
-    } catch {}
+      // TODO: Switch to Cognito
+      // await cognitoSignOut();
+      await tempSignOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </UserContext.Provider>
   );

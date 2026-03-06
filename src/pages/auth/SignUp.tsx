@@ -9,9 +9,10 @@ import Navbar from "@/components/Navbar";
 import { motion } from "framer-motion";
 import { Heart, User, Stethoscope } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { signUpWithEmailPassword } from "@/lib/apiAuth";
+// TODO: Switch to Cognito once AWS is set up
+// import { cognitoSignUp, cognitoConfirmSignUp } from "@/lib/cognito-auth";
+import { tempSignUp } from "@/lib/tempAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef } from "react";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -21,10 +22,10 @@ const SignUp = () => {
     confirmPassword: "",
   });
   const [selectedRole, setSelectedRole] = useState<'user' | 'counsellor'>('user');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useUser();
   const { toast } = useToast();
-  const googleBtnRef = useRef<HTMLDivElement | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,32 +43,53 @@ const SignUp = () => {
       return;
     }
 
-    try {
-      const auth = await signUpWithEmailPassword(formData.name, formData.email, formData.password, selectedRole);
-
-      login({ 
-        name: auth.displayName || formData.name, 
-        email: auth.email, 
-        role: selectedRole 
-      });
-
+    if (formData.password.length < 6) {
       toast({
-        title: "Welcome to MindMate!",
-        description: `Account created successfully as ${selectedRole}`,
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // TODO: Switch to Cognito
+      // const result = await cognitoSignUp({
+      const result = await tempSignUp({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        role: selectedRole,
       });
 
-      navigate(`/dashboard/${selectedRole}`);
+      if (result.success) {
+        // For temp auth, auto-login after signup
+        login({
+          userId: result.user?.userId || '',
+          name: formData.name,
+          email: formData.email,
+          role: selectedRole,
+        });
+
+        toast({
+          title: "Welcome to MindCare!",
+          description: `Account created successfully as ${selectedRole}`,
+        });
+
+        navigate(`/dashboard/${selectedRole}`);
+      }
     } catch (err: any) {
       toast({
         title: "Sign up failed",
         description: err?.message || "Could not create account",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Google sign-up removed; email/password only
-  useEffect(() => {}, [selectedRole]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,14 +106,11 @@ const SignUp = () => {
             <div className="inline-flex w-16 h-16 rounded-full bg-primary/10 items-center justify-center mb-4">
               <Heart className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Join MindMate</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Join MindCare</h1>
             <p className="text-muted-foreground">Start your wellness journey today</p>
           </div>
 
           <Card className="p-8 shadow-soft border-border bg-card">
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">Sign up with Email</p>
-            </div>
             <Tabs value={selectedRole} onValueChange={(v) => setSelectedRole(v as any)} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="user" className="flex items-center gap-2">
@@ -117,6 +136,7 @@ const SignUp = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                         className="border-input"
                       />
                     </div>
@@ -131,6 +151,7 @@ const SignUp = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                         className="border-input"
                       />
                     </div>
@@ -145,6 +166,7 @@ const SignUp = () => {
                         value={formData.password}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                         className="border-input"
                       />
                     </div>
@@ -159,24 +181,27 @@ const SignUp = () => {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                         className="border-input"
                       />
                     </div>
 
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary/90 transition-smooth">
-                      Sign Up as {role.charAt(0).toUpperCase() + role.slice(1)}
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-primary hover:bg-primary/90 transition-smooth"
+                      disabled={loading}
+                    >
+                      {loading ? 'Creating account...' : `Sign Up as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
                     </Button>
                   </form>
                 </TabsContent>
               ))}
             </Tabs>
 
-            
-
             <div className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/auth/signin" className="text-primary hover:underline font-medium" aria-label="Sign in with Email">
-                Sign in with Email
+              <Link to="/auth/signin" className="text-primary hover:underline font-medium">
+                Sign in
               </Link>
             </div>
           </Card>
