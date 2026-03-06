@@ -180,8 +180,9 @@ app.post('/api/tts', async (req, res) => {
 
 ### Save Mood Check-in
 ```sql
-INSERT INTO mood_check_ins (id, user_id, mood_value, emotion, notes)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO mood_check_ins (id, user_id, mood, created_at)
+VALUES (UUID(), ?, ?, NOW());
+-- mood values: 'Happy', 'Dull', 'Sad', 'Anxious', 'Angry', 'Stressed', 'Depressed'
 ```
 
 ### Save Journal Entry

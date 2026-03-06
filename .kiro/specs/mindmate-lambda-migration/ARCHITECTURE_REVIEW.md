@@ -146,16 +146,15 @@
 
 ### Required New Tables
 ```sql
--- Mood tracking
+-- Mood tracking (Quick Mood Check-in)
 CREATE TABLE mood_check_ins (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
-    mood_value INT NOT NULL,
-    emotion VARCHAR(50),
-    notes TEXT,
+    mood ENUM('Happy', 'Dull', 'Sad', 'Anxious', 'Angry', 'Stressed', 'Depressed') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    INDEX idx_user_date (user_id, created_at)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_date (user_id, created_at),
+    INDEX idx_mood (mood)
 );
 
 -- Journal entries

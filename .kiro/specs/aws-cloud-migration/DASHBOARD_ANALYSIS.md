@@ -138,14 +138,11 @@ CREATE INDEX idx_users_mood_streak ON users(mood_streak);
 CREATE TABLE mood_check_ins (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
-    mood_value INT NOT NULL CHECK (mood_value BETWEEN 1 AND 5),
-    emotion_classification VARCHAR(50),
-    sentiment_score DECIMAL(3,2),
-    notes TEXT,
+    mood ENUM('Happy', 'Dull', 'Sad', 'Anxious', 'Angry', 'Stressed', 'Depressed') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_mood_user_date (user_id, created_at),
-    INDEX idx_mood_created (created_at)
+    INDEX idx_user_date (user_id, created_at),
+    INDEX idx_mood (mood)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
