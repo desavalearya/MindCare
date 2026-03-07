@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// TODO: Switch back to Cognito once AWS is set up
-// import { getCognitoCurrentUser, getCognitoUserAttributes, cognitoSignOut } from '@/lib/cognito-auth';
-import { getTempCurrentUser, getTempUserAttributes, tempSignOut } from '@/lib/tempAuth';
+import { getCognitoCurrentUser, getCognitoUserAttributes, cognitoSignOut } from '@/lib/cognito-auth';
 
 interface UserData {
   name: string;
@@ -27,21 +25,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session on mount
     const checkAuth = async () => {
       try {
-        // TODO: Switch to Cognito
-        // const currentUser = await getCognitoCurrentUser();
-        const currentUser = await getTempCurrentUser();
-        
+        const currentUser = await getCognitoCurrentUser();
+
         if (currentUser) {
-          // TODO: Switch to Cognito
-          // const attributes = await getCognitoUserAttributes();
-          const attributes = await getTempUserAttributes();
-          
+          const attributes = await getCognitoUserAttributes();
+
           if (attributes) {
             setUser({
               userId: currentUser.userId,
               name: attributes.name,
               email: attributes.email,
-              role: attributes.role as 'user' | 'counsellor' | 'admin',
+              role: (attributes.role as 'user' | 'counsellor' | 'admin') || 'user',
             });
           }
         }
@@ -61,9 +55,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // TODO: Switch to Cognito
-      // await cognitoSignOut();
-      await tempSignOut();
+      await cognitoSignOut();
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);

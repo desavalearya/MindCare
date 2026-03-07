@@ -90,6 +90,7 @@ temp/
 *.tmp
 *.bak
 *.cache
+*.md
 
 # Lock files (optional - uncomment if you want to ignore)
 # package-lock.json

@@ -5,11 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server:start": "node server/index.js",
+    "server:start": "node --experimental-vm-modules server/index.js",
+    "server:dev": "node --watch server/index.js",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup:env": "node scripts/validate-env.js",
+    "validate:env": "node scripts/validate-env.js",
+    "lambda:package": "cd lambda-functions && npm install && zip -r auth-handler.zip auth-handler.js node_modules/ && zip -r chat-handler.zip chat-handler.js node_modules/ && zip -r voice-handler.zip voice-handler.js node_modules/",
+    "lambda:deploy": "npm run lambda:package && aws lambda update-function-code --function-name mindcare-auth-handler --zip-file fileb://lambda-functions/auth-handler.zip --region us-east-1 && aws lambda update-function-code --function-name mindcare-chat-handler --zip-file fileb://lambda-functions/chat-handler.zip --region us-east-1 && aws lambda update-function-code --function-name mindcare-voice-handler --zip-file fileb://lambda-functions/voice-handler.zip --region us-east-1"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.15.1",
@@ -55,11 +60,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "cors": "^2.8.6",
     "date-fns": "^3.6.0",
+    "dotenv": "^17.3.1",
     "embla-carousel-react": "^8.6.0",
+    "express": "^5.2.1",
     "framer-motion": "^12.23.22",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
+    "multer": "^2.1.1",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -71,6 +80,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^13.0.0",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },

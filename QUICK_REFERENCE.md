@@ -1,379 +1,258 @@
-# MindMate AWS Services - Quick Reference
+# MindCare AWS - Quick Reference Card
 
-## 🚀 Import Statements
+## 🚀 3-Step Quick Start
 
-### Authentication (Cognito)
-```typescript
-import { 
-  cognitoSignUp, 
-  cognitoSignIn, 
-  cognitoSignOut,
-  getCognitoCurrentUser,
-  getCognitoUserAttributes,
-  cognitoResetPassword 
-} from '@/lib/cognito-auth';
-```
-
-### AI Chat (Bedrock)
-```typescript
-import { 
-  sendChatMessage, 
-  streamChatMessage, 
-  analyzeEmotion 
-} from '@/lib/bedrock-chat';
-```
-
-### Voice-to-Text (Transcribe)
-```typescript
-import { transcribeAudio } from '@/lib/transcribe-service';
-```
-
-### Text-to-Speech (Polly)
-```typescript
-import { 
-  textToSpeech, 
-  playAudio, 
-  downloadAudio,
-  getAvailableVoices 
-} from '@/lib/polly-service';
-```
-
-### File Storage (S3)
-```typescript
-import { 
-  uploadToS3, 
-  uploadFileWithProgress,
-  getDownloadUrl,
-  uploadAudioFile,
-  uploadProfilePicture 
-} from '@/lib/s3-service';
-```
-
-## 📝 Usage Examples
-
-### Sign Up User
-```typescript
-const result = await cognitoSignUp({
-  email: 'user@example.com',
-  password: 'SecurePass123!',
-  name: 'John Doe',
-  role: 'user' // or 'counsellor', 'admin'
-});
-
-if (result.success) {
-  // Show verification code input
-}
-```
-
-### Sign In User
-```typescript
-const result = await cognitoSignIn({
-  email: 'user@example.com',
-  password: 'SecurePass123!'
-});
-
-if (result.success) {
-  console.log('User ID:', result.user.userId);
-  console.log('Access Token:', result.tokens.accessToken);
-}
-```
-
-### Send Chat Message
-```typescript
-const result = await sendChatMessage({
-  message: 'I feel anxious today',
-  conversationHistory: [
-    { role: 'user', content: 'Hello' },
-    { role: 'assistant', content: 'Hi! How can I help?' }
-  ]
-});
-
-console.log('AI Response:', result.response);
-```
-
-### Transcribe Audio
-```typescript
-const audioFile = event.target.files[0]; // File from input
-
-const result = await transcribeAudio({
-  audioFile,
-  userId: currentUser.id
-});
-
-console.log('Transcript:', result.transcript);
-```
-
-### Generate Speech
-```typescript
-const result = await textToSpeech({
-  text: 'Hello, how are you feeling today?',
-  voiceId: 'Joanna', // optional
-  engine: 'neural' // optional
-});
-
-if (result.audioUrl) {
-  playAudio(result.audioUrl);
-}
-```
-
-### Upload File to S3
-```typescript
-const file = event.target.files[0];
-
-const result = await uploadFileWithProgress(
-  file,
-  `uploads/${userId}/${file.name}`,
-  (progress) => console.log(`Upload: ${progress}%`)
-);
-
-console.log('File URL:', result.url);
-```
-
-## 🔧 Backend API Examples
-
-### Chat Endpoint
-```javascript
-app.post('/api/chat', async (req, res) => {
-  const { message, conversationHistory, userId } = req.body;
-  
-  const result = await sendChatMessage(message, conversationHistory);
-  
-  if (result.success) {
-    // Save to database
-    await db.query(
-      'INSERT INTO chat_messages (id, user_id, message_text, response_text) VALUES (?, ?, ?, ?)',
-      [crypto.randomUUID(), userId, message, result.response]
-    );
-    
-    res.json({ success: true, response: result.response });
-  } else {
-    res.status(500).json({ error: result.error });
-  }
-});
-```
-
-### Voice Transcription Endpoint
-```javascript
-app.post('/api/voice/transcribe', async (req, res) => {
-  const { s3Uri, userId } = req.body;
-  const jobName = `transcribe-${userId}-${Date.now()}`;
-  
-  await startTranscription(s3Uri, jobName);
-  const result = await pollTranscriptionJob(jobName);
-  
-  res.json(result);
-});
-```
-
-### Text-to-Speech Endpoint
-```javascript
-app.post('/api/tts', async (req, res) => {
-  const { text, userId } = req.body;
-  
-  const result = await textToSpeech(text, userId);
-  
-  res.json({ audioUrl: result.audioUrl });
-});
-```
-
-## 🗄️ Database Queries
-
-### Save Mood Check-in
-```sql
-INSERT INTO mood_check_ins (id, user_id, mood, created_at)
-VALUES (UUID(), ?, ?, NOW());
--- mood values: 'Happy', 'Dull', 'Sad', 'Anxious', 'Angry', 'Stressed', 'Depressed'
-```
-
-### Save Journal Entry
-```sql
-INSERT INTO journal_entries (id, user_id, entry_text, sentiment, ai_feedback, entry_date)
-VALUES (?, ?, ?, ?, ?, CURDATE())
-ON DUPLICATE KEY UPDATE entry_text = VALUES(entry_text);
-```
-
-### Log Wellness Activity
-```sql
-INSERT INTO wellness_activities (id, user_id, activity_type, duration_minutes, points_earned)
-VALUES (?, ?, ?, ?, ?);
-```
-
-### Update User Points
-```sql
-INSERT INTO user_points (user_id, total_points, current_streak)
-VALUES (?, ?, ?)
-ON DUPLICATE KEY UPDATE 
-  total_points = total_points + VALUES(total_points),
-  current_streak = VALUES(current_streak);
-```
-
-### Get User Dashboard
-```sql
-SELECT * FROM user_dashboard_summary WHERE user_id = ?;
-```
-
-### Get Counsellor Dashboard
-```sql
-SELECT * FROM counsellor_dashboard_summary WHERE counsellor_id = ?;
-```
-
-## 🌍 Environment Variables
-
-### Frontend (.env)
 ```bash
-VITE_AWS_REGION=us-east-1
-VITE_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
-VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
-VITE_API_GATEWAY_URL=http://localhost:8083
-VITE_S3_BUCKET=mindmate-user-content
-VITE_S3_AUDIO_BUCKET=mindmate-audio-uploads
+1. npm run setup:env      # Setup environment
+2. npm run validate:env   # Validate configuration
+3. npm run dev            # Start development
 ```
-
-### Backend (server/.env)
-```bash
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
-BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
-S3_AUDIO_BUCKET=mindmate-audio-uploads
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=password
-DB_NAME=mindmate
-```
-
-## 🎨 React Component Examples
-
-### Sign In Form
-```typescript
-const handleSignIn = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  const result = await cognitoSignIn({ email, password });
-  
-  if (result.success) {
-    navigate('/dashboard');
-  } else {
-    setError('Invalid credentials');
-  }
-};
-```
-
-### Chat Component
-```typescript
-const [messages, setMessages] = useState<ChatMessage[]>([]);
-const [input, setInput] = useState('');
-
-const handleSend = async () => {
-  const result = await sendChatMessage({
-    message: input,
-    conversationHistory: messages
-  });
-  
-  setMessages([
-    ...messages,
-    { role: 'user', content: input },
-    { role: 'assistant', content: result.response }
-  ]);
-  setInput('');
-};
-```
-
-### Voice Input Component
-```typescript
-const handleVoiceInput = async (audioFile: File) => {
-  setLoading(true);
-  
-  const result = await transcribeAudio({ audioFile, userId });
-  
-  if (result.transcript) {
-    setTranscript(result.transcript);
-    // Send transcript to chat
-    await handleSend(result.transcript);
-  }
-  
-  setLoading(false);
-};
-```
-
-## 🔍 Debugging Tips
-
-### Check Cognito Token
-```typescript
-const token = await getCognitoToken();
-console.log('JWT Token:', token);
-```
-
-### Check Current User
-```typescript
-const user = await getCognitoCurrentUser();
-console.log('Current User:', user);
-```
-
-### Check User Attributes
-```typescript
-const attrs = await getCognitoUserAttributes();
-console.log('User Role:', attrs?.role);
-```
-
-### Test Bedrock Connection
-```typescript
-const result = await sendChatMessage({ message: 'test' });
-console.log('Bedrock Response:', result);
-```
-
-### Test S3 Upload
-```typescript
-const testFile = new File(['test'], 'test.txt', { type: 'text/plain' });
-const result = await uploadToS3(testFile, 'test/test.txt');
-console.log('S3 URI:', result);
-```
-
-## ⚠️ Common Errors
-
-### "User pool does not exist"
-- Check VITE_COGNITO_USER_POOL_ID in .env
-- Verify User Pool exists in AWS Console
-
-### "Access denied to Bedrock"
-- Enable model access in AWS Bedrock Console
-- Check IAM permissions for bedrock:InvokeModel
-
-### "S3 bucket not found"
-- Create bucket in AWS S3 Console
-- Check bucket name matches .env
-
-### "CORS error"
-- Add CORS policy to S3 bucket
-- Check API endpoint allows CORS
-
-### "Invalid credentials"
-- Verify AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-- Check IAM user has required permissions
-
-## 📚 Documentation Links
-
-- [AWS Amplify](https://docs.amplify.aws/)
-- [Amazon Cognito](https://docs.aws.amazon.com/cognito/)
-- [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/)
-- [Amazon Transcribe](https://docs.aws.amazon.com/transcribe/)
-- [Amazon Polly](https://docs.aws.amazon.com/polly/)
-- [Amazon S3](https://docs.aws.amazon.com/s3/)
-
-## 🎯 Testing Checklist
-
-- [ ] Sign up creates user in Cognito
-- [ ] Email verification works
-- [ ] Sign in returns JWT token
-- [ ] Chat uses Bedrock Claude
-- [ ] Voice transcribes correctly
-- [ ] TTS generates audio
-- [ ] Files upload to S3
-- [ ] Dashboard loads data
-- [ ] Mood check-ins save
-- [ ] Journal entries save
 
 ---
 
-**Keep this file handy for quick reference during development!**
+## 📋 Environment Variables Checklist
+
+### Frontend (.env) - 9 Variables
+
+- [ ] `VITE_AWS_REGION` → `us-east-1`
+- [ ] `VITE_COGNITO_USER_POOL_ID` → `us-east-1_XXXXXXXXX`
+- [ ] `VITE_COGNITO_CLIENT_ID` → `XXXXXXXXXXXXXXXXXXXXXXXXXX`
+- [ ] `VITE_COGNITO_IDENTITY_POOL_ID` → `us-east-1:XXXX-XXXX-XXXX-XXXX`
+- [ ] `VITE_S3_BUCKET_NAME` → `mindcare-storage-ACCOUNT_ID`
+- [ ] `VITE_S3_AUDIO_BUCKET` → `mindcare-audio-ACCOUNT_ID`
+- [ ] `VITE_BEDROCK_MODEL_ID` → `anthropic.claude-3-sonnet-20240229-v1:0`
+- [ ] `VITE_API_GATEWAY_URL` → `https://XXXXX.execute-api.us-east-1.amazonaws.com/prod`
+- [ ] `VITE_CLOUDFRONT_DOMAIN` → `XXXXX.cloudfront.net`
+
+### Lambda: auth-handler - 3 Variables
+
+- [ ] `AWS_REGION` → `us-east-1`
+- [ ] `COGNITO_USER_POOL_ID` → `us-east-1_XXXXXXXXX`
+- [ ] `COGNITO_CLIENT_ID` → `XXXXXXXXXXXXXXXXXXXXXXXXXX`
+
+### Lambda: chat-handler - 7 Variables
+
+- [ ] `AWS_REGION` → `us-east-1`
+- [ ] `BEDROCK_MODEL_ID` → `anthropic.claude-3-sonnet-20240229-v1:0`
+- [ ] `DB_HOST` → `mindcare-cluster.cluster-XXXXX.us-east-1.rds.amazonaws.com`
+- [ ] `DB_PORT` → `3306`
+- [ ] `DB_NAME` → `mindcare`
+- [ ] `DB_USER` → `admin`
+- [ ] `DB_PASSWORD` → `[from Secrets Manager]`
+
+### Lambda: voice-handler - 5 Variables
+
+- [ ] `AWS_REGION` → `us-east-1`
+- [ ] `S3_AUDIO_BUCKET` → `mindcare-audio-ACCOUNT_ID`
+- [ ] `TRANSCRIBE_LANGUAGE_CODE` → `en-US`
+- [ ] `POLLY_VOICE_ID` → `Joanna`
+- [ ] `POLLY_ENGINE` → `neural`
+
+---
+
+## 🔍 Where to Find AWS Resource IDs
+
+| Resource | AWS Console Location | Format |
+|----------|---------------------|--------|
+| **User Pool ID** | Cognito → User Pools → [pool] → General settings | `us-east-1_XXXXXXXXX` |
+| **App Client ID** | Cognito → User Pools → [pool] → App integration | `XXXXXXXXXXXXXXXXXXXXXXXXXX` |
+| **Identity Pool ID** | Cognito → Identity Pools → [pool] → Edit | `us-east-1:XXXX-XXXX-XXXX-XXXX` |
+| **S3 Bucket** | S3 → Buckets | `mindcare-storage-123456789012` |
+| **API Gateway URL** | API Gateway → APIs → [api] → Stages → prod | `https://XXXXX.execute-api.us-east-1.amazonaws.com/prod` |
+| **Aurora Endpoint** | RDS → Databases → [cluster] → Connectivity | `mindcare-cluster.cluster-XXXXX.us-east-1.rds.amazonaws.com` |
+| **CloudFront Domain** | CloudFront → Distributions → [dist] | `XXXXX.cloudfront.net` |
+
+---
+
+## 💻 Useful Commands
+
+### Setup & Validation
+```bash
+npm run setup:env          # Interactive setup
+npm run validate:env       # Validate config
+```
+
+### Development
+```bash
+npm install                # Install dependencies
+npm run dev                # Start dev server (port 8080)
+npm run build              # Build for production
+npm run preview            # Preview production build
+```
+
+### Lambda
+```bash
+npm run lambda:package     # Package functions
+npm run lambda:deploy      # Deploy to AWS
+```
+
+### AWS CLI
+```bash
+# View Lambda logs
+aws logs tail /aws/lambda/mindcare-auth-handler --follow
+
+# List S3 buckets
+aws s3 ls
+
+# Get Cognito User Pools
+aws cognito-idp list-user-pools --max-results 10 --region us-east-1
+
+# Get API Gateway APIs
+aws apigateway get-rest-apis --region us-east-1
+```
+
+---
+
+## 📁 Key Files
+
+### Configuration
+- `.env` - Your AWS credentials (DO NOT COMMIT)
+- `.env.example` - Template
+- `src/config/aws-config.ts` - AWS config loader
+
+### Services
+- `src/services/aws/cognito.service.ts` - Cognito client
+- `src/services/aws/s3.service.ts` - S3 client
+- `src/services/aws/bedrock.service.ts` - Bedrock client
+- `src/services/api.service.ts` - API Gateway client
+
+### Lambda
+- `lambda-functions/auth-handler.js` - Authentication
+- `lambda-functions/chat-handler.js` - AI Chat
+- `lambda-functions/voice-handler.js` - Voice processing
+
+### Scripts
+- `scripts/setup-env.sh` - Setup (Linux/Mac)
+- `scripts/setup-env.bat` - Setup (Windows)
+- `scripts/validate-env.js` - Validation
+
+---
+
+## 📚 Documentation Quick Links
+
+| Document | Purpose |
+|----------|---------|
+| **FINAL_IMPLEMENTATION_SUMMARY.md** | Complete overview - START HERE |
+| **IMPLEMENTATION_README.md** | Quick start guide |
+| **AWS_ENVIRONMENT_SETUP_GUIDE.md** | Detailed setup instructions |
+| **AWS_RESOURCES_REFERENCE.md** | Where to find resource IDs |
+| **ARCHITECTURE_DIAGRAM.md** | System architecture |
+| **SETUP_CHECKLIST.md** | Progress tracker |
+| **QUICK_REFERENCE.md** | This file |
+
+---
+
+## 🔗 AWS Console Quick Links
+
+Replace `ACCOUNT_ID` with your 12-digit AWS Account ID:
+
+- **Cognito:** https://us-east-1.console.aws.amazon.com/cognito/v2/idp/user-pools
+- **S3:** https://s3.console.aws.amazon.com/s3/buckets
+- **Lambda:** https://us-east-1.console.aws.amazon.com/lambda/home#/functions
+- **API Gateway:** https://us-east-1.console.aws.amazon.com/apigateway/main/apis
+- **RDS:** https://us-east-1.console.aws.amazon.com/rds/home#databases:
+- **Bedrock:** https://us-east-1.console.aws.amazon.com/bedrock/home#/model-access
+- **CloudWatch:** https://us-east-1.console.aws.amazon.com/cloudwatch/home
+- **Secrets Manager:** https://us-east-1.console.aws.amazon.com/secretsmanager/listsecrets
+
+---
+
+## 🐛 Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| "Missing AWS configuration" | Run `npm run validate:env` |
+| Lambda 500 error | Check CloudWatch Logs |
+| CORS error | Enable CORS in API Gateway, deploy to prod |
+| Database connection error | Check security group, verify credentials |
+| File upload fails | Check S3 CORS, verify IAM permissions |
+
+---
+
+## 🧪 Testing Checklist
+
+- [ ] Environment validated (`npm run validate:env`)
+- [ ] Dev server starts without errors
+- [ ] Sign up works
+- [ ] Email verification works
+- [ ] Sign in works
+- [ ] Chat with AI works
+- [ ] Voice transcription works
+- [ ] Speech synthesis works
+- [ ] File upload works
+
+---
+
+## 🔐 Security Reminders
+
+### ⚠️ NEVER COMMIT:
+- `.env`
+- `lambda-functions/.env`
+- `*.zip`
+- `aws-credentials.json`
+
+### ✅ SAFE TO COMMIT:
+- `.env.example`
+- All source code
+- All documentation
+
+---
+
+## 📊 AWS Services Used (14 Total)
+
+1. ✅ Amazon Cognito - Authentication
+2. ✅ Amazon S3 - File storage
+3. ✅ AWS Lambda - Serverless functions (3 functions)
+4. ✅ API Gateway - REST API
+5. ✅ Amazon Aurora - Database (MySQL)
+6. ✅ Amazon Bedrock - AI chat (Claude)
+7. ✅ Amazon Transcribe - Speech-to-text
+8. ✅ Amazon Polly - Text-to-speech
+9. ✅ CloudFront - CDN
+10. ✅ CloudWatch - Monitoring
+11. ✅ AWS Amplify - Frontend hosting
+12. ✅ Secrets Manager - Credentials
+13. ✅ IAM - Access control
+14. ✅ KMS - Encryption
+
+---
+
+## 🎯 Implementation Status
+
+- ✅ Environment configuration system
+- ✅ AWS service integration
+- ✅ Setup and validation scripts
+- ✅ Comprehensive documentation
+- ✅ Lambda functions configured
+- ✅ Security best practices
+- ✅ Error handling
+- ✅ TypeScript support
+
+**Status:** COMPLETE  
+**Version:** 1.0.0  
+**Region:** us-east-1
+
+---
+
+## 🆘 Need Help?
+
+1. Check CloudWatch Logs for errors
+2. Review documentation files
+3. Use SETUP_CHECKLIST.md to track progress
+4. Contact AWS Support if needed
+
+---
+
+## 🎉 Quick Win
+
+Get started in 3 commands:
+
+```bash
+npm run setup:env && npm run validate:env && npm run dev
+```
+
+Then open `http://localhost:8080` 🚀
+
+---
+
+**Print this page for quick reference while setting up!**

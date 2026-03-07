@@ -1,429 +1,638 @@
-# TASK 2: Detailed AWS Setup Guide - Step by Step
+# MindCare AWS Setup Guide - Step-by-Step Implementation
 
-## 📋 Table of Contents
-1. AWS Account Setup
-2. IAM User Creation
-3. Amazon Cognito Setup
-4. Amazon S3 Setup
-5. Amazon Bedrock Setup
-6. AWS Lambda Setup
-7. Amazon API Gateway Setup
-8. Aurora MySQL Setup
-9. CloudWatch Setup
-10. CloudFront Setup
-11. Environment Configuration
-12. Testing & Verification
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [AWS Account Setup](#aws-account-setup)
+3. [Region Selection](#region-selection)
+4. [Service Setup Order](#service-setup-order)
+5. [Detailed Service Configuration](#detailed-service-configuration)
+6. [Environment Configuration](#environment-configuration)
+7. [Testing & Verification](#testing--verification)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
-## ⚙️ Prerequisites
-
-- AWS Account (with billing enabled)
-- Credit card for AWS billing
-- Email address for verification
-- Your AWS credentials:
-  - Access Key ID: `AKIAXGR5Q7QN6N6LFHTF`
-  - Secret Access Key: `fW4EugBT9dbHTHVVzHKgGdD5tBWowy8G12brY2hH`
-  - Account ID: `495124020251`
-
----
-
-## 🌍 IMPORTANT: AWS Region Selection
-
-**PRIMARY REGION: us-east-1 (US East - N. Virginia)**
-
-Use `us-east-1` for ALL services unless specified otherwise.
-
-**Why us-east-1?**
-- Lowest cost
-- All AWS services available
-- Best for global applications
-- Your credentials are configured for this region
-
----
-
-## STEP 1: AWS Account Setup & IAM User
-
-### 1.1 Login to AWS Console
-
-1. Go to: https://console.aws.amazon.com
-2. Click "Sign in to the Console"
-3. Enter your root email: `dhruv.batttawar@vit.edu`
-4. Enter your password: `M2KV2nA$wZ~}$6#`
-5. Click "Sign in"
-
-### 1.2 Verify Your Region
-
-1. Look at the top-right corner of AWS Console
-2. Click on the region dropdown
-3. Select **"US East (N. Virginia) us-east-1"**
-4. All subsequent steps will use this region
-
-### 1.3 Enable MFA (Multi-Factor Authentication) - RECOMMENDED
-
-1. Click your account name (top-right)
-2. Click "Security credentials"
-3. Scroll to "Multi-factor authentication (MFA)"
-4. Click "Assign MFA device"
-5. Choose "Virtual MFA device"
-6. Use Google Authenticator or Authy app
-7. Scan QR code
-8. Enter two consecutive MFA codes
-9. Click "Assign MFA"
-
-### 1.4 Verify IAM User (Already Created)
-
-Your IAM user is already created:
-- Username: `dhruv`
-- Password: `Mindcare@8032026`
-- Access Key ID: `AKIAXGR5Q7QN6N6LFHTF`
-- Secret Access Key: `fW4EugBT9dbHTHVVzHKgGdD5tBWowy8G12brY2hH`
-
-**Verify permissions:**
-1. Go to IAM Console: https://console.aws.amazon.com/iam
-2. Click "Users" in left sidebar
-3. Click "dhruv"
-4. Click "Permissions" tab
-5. Verify you have "AdministratorAccess" policy attached
-
----
-
-## STEP 2: Amazon Cognito Setup (Authentication)
-
-### 2.1 Create Cognito User Pool
-
-1. Go to Cognito Console: https://console.aws.amazon.com/cognito
-2. **Region**: Verify you're in **us-east-1**
-3. Click "Create user pool"
-
-### 2.2 Configure Sign-in Experience
-
-**Step 1: Configure sign-in experience**
-1. **Provider types**: Select "Cognito user pool"
-2. **Cognito user pool sign-in options**: Check ☑ "Email"
-3. **User name requirements**: Leave default
-4. Click "Next"
-
-### 2.3 Configure Security Requirements
-
-**Step 2: Configure security requirements**
-
-**Password policy:**
-- Select "Cognito defaults"
-- Minimum length: 8 characters
-- ☑ Require lowercase letters
-- ☑ Require uppercase letters
-- ☑ Require numbers
-- ☑ Require special characters
-
-**Multi-factor authentication:**
-- Select "No MFA" (for development)
-- For production, select "Optional MFA"
-
-**User account recovery:**
-- ☑ Enable self-service account recovery
-- Select "Email only"
-
-Click "Next"
-
-### 2.4 Configure Sign-up Experience
-
-**Step 3: Configure sign-up experience**
-
-**Self-service sign-up:**
-- ☑ Enable self-registration
-
-**Attribute verification and user account confirmation:**
-- ☑ Allow Cognito to automatically send messages to verify and confirm
-- Select "Send email message, verify email address"
-
-**Required attributes:**
-- ☑ email (already selected)
-- ☑ name
-
-**Custom attributes:**
-1. Click "Add custom attribute"
-2. Name: `role`
-3. Type: String
-4. Min length: 1
-5. Max length: 20
-6. Mutable: Yes
-7. Click "Add attribute"
-
-Click "Next"
-
-### 2.5 Configure Message Delivery
-
-**Step 4: Configure message delivery**
-
-**Email:**
-- Select "Send email with Cognito"
-- FROM email address: `no-reply@verificationemail.com` (default)
-- Reply-to email address: Leave empty
-
-Click "Next"
-
-### 2.6 Integrate Your App
-
-**Step 5: Integrate your app**
-
-**User pool name:**
-- Enter: `mindcare-users`
-
-**Hosted authentication pages:**
-- ☐ Don't use Cognito Hosted UI (uncheck)
-
-**Initial app client:**
-- App type: "Public client"
-- App client name: `mindcare-web-client`
-- Client secret: "Don't generate a client secret"
-
-**Advanced app client settings:**
-- Authentication flows:
-  - ☑ ALLOW_USER_SRP_AUTH
-  - ☑ ALLOW_REFRESH_TOKEN_AUTH
-  - ☐ ALLOW_USER_PASSWORD_AUTH (uncheck for security)
-
-Click "Next"
-
-### 2.7 Review and Create
-
-**Step 6: Review and create**
-1. Review all settings
-2. Click "Create user pool"
-3. Wait for creation (30 seconds)
-
-### 2.8 Note Down User Pool Details
-
-After creation, you'll see:
-1. **User pool ID**: Copy this (format: `us-east-1_XXXXXXXXX`)
-   - Example: `us-east-1_AbC123XyZ`
-2. Click on the user pool name "mindcare-users"
-3. Click "App integration" tab
-4. Scroll to "App clients and analytics"
-5. Click on "mindcare-web-client"
-6. **Client ID**: Copy this (format: `1a2b3c4d5e6f7g8h9i0j1k2l3m`)
-
-**Save these values - you'll need them later!**
-
-### 2.9 Create Cognito Identity Pool
-
-1. Go back to Cognito Console
-2. Click "Identity pools" in left sidebar
-3. Click "Create identity pool"
-4. **Identity pool name**: `mindcare_identity_pool`
-5. **Enable access to unauthenticated identities**: ☐ No
-6. **Authentication providers**:
-   - Expand "Amazon Cognito user pool"
-   - User pool ID: Paste your User Pool ID
-   - App client ID: Paste your Client ID
-7. Click "Create pool"
-8. **Note down Identity Pool ID** (format: `us-east-1:12345678-1234-1234-1234-123456789012`)
-
-### 2.10 Create User Groups
-
-1. Go to your User Pool "mindcare-users"
-2. Click "Groups" tab
-3. Click "Create group"
-
-**Group 1: Users**
-- Group name: `user`
-- Description: `Regular users`
-- Precedence: `3`
-- Click "Create group"
-
-**Group 2: Counsellors**
-- Group name: `counsellor`
-- Description: `Mental health counsellors`
-- Precedence: `2`
-- Click "Create group"
-
-**Group 3: Admins**
-- Group name: `admin`
-- Description: `System administrators`
-- Precedence: `1`
-- Click "Create group"
-
-✅ **Cognito Setup Complete!**
-
----
-
-## STEP 3: Amazon S3 Setup (File Storage)
-
-### 3.1 Create S3 Bucket #1 (Audio Uploads)
-
-1. Go to S3 Console: https://console.aws.amazon.com/s3
-2. **Region**: Verify you're in **us-east-1**
-3. Click "Create bucket"
-
-**Bucket settings:**
-- **Bucket name**: `mindcare-audio-uploads` (must be globally unique)
-  - If taken, try: `mindcare-audio-uploads-495124020251`
-- **AWS Region**: US East (N. Virginia) us-east-1
-- **Object Ownership**: ACLs disabled (recommended)
-- **Block Public Access settings**: Keep all checked ☑ (block all public access)
-- **Bucket Versioning**: Disable
-- **Default encryption**: 
-  - Encryption type: Server-side encryption with Amazon S3 managed keys (SSE-S3)
-- Click "Create bucket"
-
-### 3.2 Configure CORS for Audio Bucket
-
-1. Click on bucket name "mindcare-audio-uploads"
-2. Click "Permissions" tab
-3. Scroll to "Cross-origin resource sharing (CORS)"
-4. Click "Edit"
-5. Paste this JSON:
-
-```json
-[
-    {
-        "AllowedHeaders": [
-            "*"
-        ],
-        "AllowedMethods": [
-            "GET",
-            "PUT",
-            "POST",
-            "DELETE",
-            "HEAD"
-        ],
-        "AllowedOrigins": [
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "https://*.amplifyapp.com",
-            "https://mindcare.com"
-        ],
-        "ExposeHeaders": [
-            "ETag",
-            "x-amz-server-side-encryption",
-            "x-amz-request-id",
-            "x-amz-id-2"
-        ],
-        "MaxAgeSeconds": 3600
-    }
-]
+## Prerequisites
+
+### Required Tools
+- AWS Account with billing enabled
+- AWS CLI installed (version 2.x)
+- Node.js 20.x or higher
+- MySQL client or MySQL Workbench
+- Text editor (VS Code recommended)
+- Git
+
+### AWS CLI Installation
+**Windows**:
+```powershell
+# Download from https://awscli.amazonaws.com/AWSCLIV2.msi
+# Run installer
+# Verify installation
+aws --version
 ```
 
-6. Click "Save changes"
+**Mac**:
+```bash
+brew install awscli
+aws --version
+```
 
-### 3.3 Create S3 Bucket #2 (User Content)
+**Linux**:
+```bash
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+```
 
-1. Go back to S3 Console
-2. Click "Create bucket"
+### AWS CLI Configuration
+```bash
+aws configure
+# Enter:
+# AWS Access Key ID: AKIAXGR5Q7QN6N6LFHTF
+# AWS Secret Access Key: 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
+# Default region: us-east-1
+# Default output format: json
+```
 
-**Bucket settings:**
-- **Bucket name**: `mindcare-user-content`
-  - If taken, try: `mindcare-user-content-495124020251`
-- **AWS Region**: US East (N. Virginia) us-east-1
-- **Object Ownership**: ACLs disabled (recommended)
-- **Block Public Access settings**: Keep all checked ☑
-- **Bucket Versioning**: Disable
-- **Default encryption**: SSE-S3
-- Click "Create bucket"
+---
 
-### 3.4 Configure CORS for User Content Bucket
+## AWS Account Setup
 
-1. Click on bucket name "mindcare-user-content"
+### Step 1: Sign in to AWS Console
+1. Go to https://console.aws.amazon.com
+2. Sign in with your AWS account
+3. Verify you're in the correct region (us-east-1)
+
+### Step 2: Enable Billing Alerts
+1. Click your account name (top right) → "Billing and Cost Management"
+2. Left sidebar → "Billing preferences"
+3. Check "Receive Billing Alerts"
+4. Enter email address
+5. Click "Save preferences"
+
+### Step 3: Set Up Budget Alert
+1. Left sidebar → "Budgets"
+2. Click "Create budget"
+3. Select "Cost budget"
+4. Budget name: "MindCare-Monthly-Budget"
+5. Budgeted amount: $500 (adjust as needed)
+6. Alert threshold: 80%
+7. Email: your-email@example.com
+8. Click "Create budget"
+
+---
+
+## Region Selection
+
+**Primary Region**: us-east-1 (US East - N. Virginia)
+
+**Rationale**:
+- Lowest latency for US users
+- All AWS services available
+- Bedrock Claude 3 Sonnet available
+- Most cost-effective region
+- Largest AWS region with best reliability
+
+**Important**: Use us-east-1 for ALL services to minimize latency and data transfer costs.
+
+---
+
+## Service Setup Order
+
+Services must be created in this specific order due to dependencies:
+
+1. IAM Roles & Policies (Required by all services)
+2. Amazon S3 Buckets (Required by Lambda, Transcribe, Polly)
+3. Amazon Cognito User Pool (Required by API Gateway, Lambda)
+4. Amazon Cognito Identity Pool (Required by frontend)
+5. AWS Secrets Manager (Required by Lambda for DB credentials)
+6. Amazon Aurora MySQL (Database)
+7. AWS Lambda Functions (Required by API Gateway)
+8. Amazon API Gateway (REST API)
+9. Amazon Bedrock Model Access (Required by chat Lambda)
+10. Amazon CloudWatch (Logging)
+11. Amazon CloudFront (CDN)
+12. AWS Amplify (Frontend hosting)
+
+---
+
+
+## Detailed Service Configuration
+
+### SERVICE 1: IAM Roles & Policies
+
+**Purpose**: Create IAM roles and policies for Lambda functions and other services
+
+**Estimated Time**: 15 minutes
+
+**Region**: Global (but create in us-east-1 console)
+
+#### Step 1.1: Create Lambda Execution Role
+
+1. Go to AWS Console → Search "IAM" → Click "IAM"
+2. Left sidebar → Click "Roles"
+3. Click "Create role" button (orange button, top right)
+4. **Select trusted entity**:
+   - Trusted entity type: "AWS service"
+   - Use case: Select "Lambda"
+   - Click "Next"
+5. **Add permissions**:
+   - Search and select these policies (use search box):
+     - ✅ AWSLambdaBasicExecutionRole
+     - ✅ AmazonCognitoPowerUser
+     - ✅ AmazonS3FullAccess
+     - ✅ AmazonTranscribeFullAccess
+     - ✅ AmazonPollyFullAccess
+     - ✅ SecretsManagerReadWrite
+     - ✅ CloudWatchFullAccess
+   - Click "Next"
+6. **Name and review**:
+   - Role name: `MindCare-Lambda-Execution-Role`
+   - Description: "Execution role for MindCare Lambda functions"
+   - Click "Create role"
+
+#### Step 1.2: Add Bedrock Permissions to Lambda Role
+
+1. In IAM Roles list, search for "MindCare-Lambda-Execution-Role"
+2. Click on the role name
+3. Click "Add permissions" → "Create inline policy"
+4. Click "JSON" tab
+5. Paste this policy:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": "arn:aws:bedrock:us-east-1::foundation-model/*"
+    }
+  ]
+}
+```
+6. Click "Review policy"
+7. Policy name: `BedrockInvokeModel`
+8. Click "Create policy"
+
+#### Step 1.3: Create Frontend User Role (for Cognito Identity Pool)
+
+1. IAM → Roles → "Create role"
+2. **Select trusted entity**:
+   - Trusted entity type: "Web identity"
+   - Identity provider: "Amazon Cognito"
+   - Click "Next"
+3. **Add permissions**:
+   - Search and select:
+     - ✅ AmazonS3ReadOnlyAccess
+   - Click "Next"
+4. **Name and review**:
+   - Role name: `MindCare-Frontend-User-Role`
+   - Description: "Role for authenticated frontend users"
+   - Click "Create role"
+
+**Verification**:
+- ✅ MindCare-Lambda-Execution-Role exists
+- ✅ MindCare-Frontend-User-Role exists
+- ✅ Copy both Role ARNs (you'll need them later)
+
+---
+
+### SERVICE 2: Amazon S3 Buckets
+
+**Purpose**: Store audio files, user content, and transcription results
+
+**Estimated Time**: 10 minutes
+
+**Region**: us-east-1
+
+#### Step 2.1: Create Audio Uploads Bucket
+
+1. Go to AWS Console → Search "S3" → Click "S3"
+2. Click "Create bucket" (orange button)
+3. **General configuration**:
+   - Bucket name: `mindcare-audio-uploads-495124020251` (must be globally unique)
+   - AWS Region: "US East (N. Virginia) us-east-1"
+4. **Object Ownership**:
+   - Select "ACLs disabled (recommended)"
+5. **Block Public Access settings**:
+   - ✅ Keep "Block all public access" CHECKED (security best practice)
+6. **Bucket Versioning**:
+   - Select "Disable"
+7. **Default encryption**:
+   - Encryption type: "Server-side encryption with Amazon S3 managed keys (SSE-S3)"
+8. Click "Create bucket"
+
+#### Step 2.2: Configure CORS for Audio Bucket
+
+1. Click on bucket name "mindcare-audio-uploads-495124020251"
 2. Click "Permissions" tab
-3. Scroll to "Cross-origin resource sharing (CORS)"
+3. Scroll down to "Cross-origin resource sharing (CORS)"
 4. Click "Edit"
-5. Paste the same JSON as above
+5. Paste this CORS configuration:
+```json
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT", "POST", "DELETE"],
+    "AllowedOrigins": [
+      "http://localhost:5173",
+      "https://mindcare.com",
+      "https://*.amplifyapp.com"
+    ],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
 6. Click "Save changes"
 
-### 3.5 Create Lifecycle Policy (Optional - Cost Savings)
+#### Step 2.3: Create User Content Bucket
 
-**For audio-uploads bucket (auto-delete old files):**
-1. Click on "mindcare-audio-uploads"
+1. S3 Console → Click "Create bucket"
+2. **General configuration**:
+   - Bucket name: `mindcare-user-content-495124020251`
+   - AWS Region: "US East (N. Virginia) us-east-1"
+3. **Object Ownership**: ACLs disabled
+4. **Block Public Access**: ✅ Block all public access
+5. **Bucket Versioning**: Disable
+6. **Default encryption**: SSE-S3
+7. Click "Create bucket"
+
+#### Step 2.4: Configure CORS for User Content Bucket
+
+1. Click on "mindcare-user-content-495124020251"
+2. Permissions tab → CORS → Edit
+3. Paste same CORS configuration as above
+4. Click "Save changes"
+
+#### Step 2.5: Create Lifecycle Policy (Optional - Cost Optimization)
+
+1. Click on "mindcare-audio-uploads-495124020251"
 2. Click "Management" tab
 3. Click "Create lifecycle rule"
-4. **Rule name**: `delete-old-audio`
-5. **Rule scope**: Apply to all objects
-6. **Lifecycle rule actions**: ☑ Expire current versions of objects
-7. **Days after object creation**: `90` (delete after 90 days)
-8. Click "Create rule"
+4. **Lifecycle rule configuration**:
+   - Rule name: "Delete-Old-Audio-Files"
+   - Choose rule scope: "Apply to all objects in the bucket"
+5. **Lifecycle rule actions**:
+   - ✅ Check "Expire current versions of objects"
+   - Days after object creation: 30
+6. Click "Create rule"
 
-✅ **S3 Setup Complete!**
-
-**Note down your bucket names:**
-- Audio bucket: `mindcare-audio-uploads` (or your unique name)
-- User content bucket: `mindcare-user-content` (or your unique name)
-
----
-
-## STEP 4: Amazon Bedrock Setup (AI - Claude)
-
-### 4.1 Enable Bedrock Model Access
-
-1. Go to Bedrock Console: https://console.aws.amazon.com/bedrock
-2. **Region**: Verify you're in **us-east-1**
-3. In left sidebar, click "Model access"
-4. Click "Manage model access" (orange button)
-
-### 4.2 Request Access to Claude 3 Sonnet
-
-1. Find "Anthropic" section
-2. Find "Claude 3 Sonnet" model
-3. Check the box ☑ next to "Claude 3 Sonnet"
-4. Scroll down and click "Request model access"
-5. Wait for approval (usually instant, max 5 minutes)
-
-### 4.3 Verify Model Access
-
-1. Go back to "Model access" page
-2. Refresh the page
-3. Look for "Claude 3 Sonnet"
-4. Status should show "Access granted" (green)
-
-### 4.4 Test Bedrock (Optional)
-
-1. In left sidebar, click "Playgrounds"
-2. Click "Chat"
-3. Select model: "Claude 3 Sonnet"
-4. Type a test message: "Hello, how are you?"
-5. Click "Run"
-6. You should see a response from Claude
-
-✅ **Bedrock Setup Complete!**
-
-**Model ID to use**: `anthropic.claude-3-sonnet-20240229-v1:0`
+**Verification**:
+- ✅ mindcare-audio-uploads-495124020251 bucket exists
+- ✅ mindcare-user-content-495124020251 bucket exists
+- ✅ CORS configured on both buckets
+- ✅ Copy bucket names (you'll need them for .env)
 
 ---
 
-## STEP 5: AWS Lambda Setup (Serverless Functions)
+### SERVICE 3: Amazon Cognito User Pool
 
-### 5.1 Create IAM Role for Lambda
+**Purpose**: User authentication and management
 
-1. Go to IAM Console: https://console.aws.amazon.com/iam
-2. Click "Roles" in left sidebar
-3. Click "Create role"
+**Estimated Time**: 15 minutes
 
-**Step 1: Select trusted entity**
-- Trusted entity type: AWS service
-- Use case: Lambda
-- Click "Next"
+**Region**: us-east-1
 
-**Step 2: Add permissions**
-Search and select these policies (check the box):
-- ☑ `AWSLambdaBasicExecutionRole`
-- ☑ `AmazonCognitoPowerUser`
-- ☑ `AmazonBedrockFullAccess`
-- ☑ `AmazonTranscribeFullAccess`
-- ☑ `AmazonPollyFullAccess`
-- ☑ `AmazonS3FullAccess`
-- ☑ `SecretsManagerReadWrite`
-- ☑ `CloudWatchLogsFullAccess`
+#### Step 3.1: Create User Pool
 
-Click "Next"
+1. Go to AWS Console → Search "Cognito" → Click "Amazon Cognito"
+2. Click "Create user pool" (orange button)
 
-**Step 3: Name, review, and create**
-- Role name: `MindCareLambdaExecutionRole`
-- Description: `Execution role for MindCare Lambda functions`
-- Click "Create role"
+#### Step 3.2: Configure Sign-in Experience
 
-### 5.2 Prepare Lambda Deployment Packages
+1. **Cognito user pool sign-in options**:
+   - Provider types: ✅ "Cognito user pool"
+   - Cognito user pool sign-in options:
+     - ✅ Email
+     - ⬜ Phone number (uncheck)
+     - ⬜ Username (uncheck)
+2. Click "Next"
 
-**On your local machine:**
+#### Step 3.3: Configure Security Requirements
+
+1. **Password policy**:
+   - Password policy mode: "Cognito defaults"
+   - Password minimum length: 8
+   - Password requirements:
+     - ✅ Contains at least 1 number
+     - ✅ Contains at least 1 special character
+     - ✅ Contains at least 1 uppercase letter
+     - ✅ Contains at least 1 lowercase letter
+2. **Multi-factor authentication**:
+   - MFA enforcement: "Optional MFA" (recommended for production)
+   - MFA methods: ✅ Authenticator apps
+3. **User account recovery**:
+   - Self-service account recovery: ✅ Enable
+   - Delivery method: "Email only"
+4. Click "Next"
+
+#### Step 3.4: Configure Sign-up Experience
+
+1. **Self-service sign-up**:
+   - ✅ Enable self-registration
+2. **Attribute verification and user account confirmation**:
+   - Cognito-assisted verification: ✅ "Allow Cognito to automatically send messages to verify and confirm"
+   - Attributes to verify: ✅ "Send email message, verify email address"
+3. **Required attributes**:
+   - ✅ email (already selected)
+   - ✅ name
+4. **Custom attributes**:
+   - Click "Add custom attribute"
+   - Attribute name: `role`
+   - Type: "String"
+   - Min length: 1
+   - Max length: 20
+   - Mutable: ✅ Yes
+   - Click "Add"
+5. Click "Next"
+
+#### Step 3.5: Configure Message Delivery
+
+1. **Email**:
+   - Email provider: "Send email with Cognito"
+   - FROM email address: "no-reply@verificationemail.com" (default)
+   - Reply-to email address: (leave blank)
+2. **SMS** (if MFA enabled):
+   - Skip for now (can configure later)
+3. Click "Next"
+
+#### Step 3.6: Integrate Your App
+
+1. **User pool name**:
+   - User pool name: `mindcare-users`
+2. **Hosted authentication pages**:
+   - ⬜ Use the Cognito Hosted UI (uncheck - we have custom UI)
+3. **Initial app client**:
+   - App type: "Public client"
+   - App client name: `mindcare-web-client`
+   - Client secret: "Don't generate a client secret"
+   - Authentication flows:
+     - ✅ ALLOW_USER_PASSWORD_AUTH
+     - ✅ ALLOW_REFRESH_TOKEN_AUTH
+     - ✅ ALLOW_USER_SRP_AUTH
+4. Click "Next"
+
+#### Step 3.7: Review and Create
+
+1. Review all settings
+2. Click "Create user pool"
+3. **IMPORTANT**: Copy these values (you'll need them):
+   - User Pool ID (e.g., `us-east-1_ABC123XYZ`)
+   - App Client ID (e.g., `1a2b3c4d5e6f7g8h9i0j`)
+
+**Verification**:
+- ✅ User pool "mindcare-users" created
+- ✅ User Pool ID copied
+- ✅ App Client ID copied
+- ✅ Custom attribute "role" exists
+
+---
+
+### SERVICE 4: Amazon Cognito Identity Pool
+
+**Purpose**: Provide AWS credentials to authenticated users for S3 access
+
+**Estimated Time**: 10 minutes
+
+**Region**: us-east-1
+
+#### Step 4.1: Create Identity Pool
+
+1. Cognito Console → Left sidebar → Click "Federated identities" (or "Identity pools")
+2. Click "Create identity pool" (or "Create new identity pool")
+3. **Identity pool name**: `mindcare_identity_pool`
+4. **Unauthenticated identities**:
+   - ⬜ Enable access to unauthenticated identities (uncheck)
+5. **Authentication providers**:
+   - Expand "Cognito" section
+   - User Pool ID: Paste your User Pool ID from Step 3.7
+   - App Client ID: Paste your App Client ID from Step 3.7
+6. Click "Create pool"
+
+#### Step 4.2: Configure IAM Roles
+
+1. **Authenticated role**:
+   - IAM role: "Create a new IAM Role"
+   - Role name: `Cognito_mindcare_identity_poolAuth_Role` (auto-generated)
+2. **Unauthenticated role**:
+   - Skip (we disabled unauthenticated access)
+3. Click "Allow"
+
+#### Step 4.3: Update Authenticated Role Permissions
+
+1. Go to IAM Console → Roles
+2. Search for "Cognito_mindcare_identity_poolAuth_Role"
+3. Click on the role
+4. Click "Add permissions" → "Attach policies"
+5. Search and attach:
+   - ✅ AmazonS3ReadOnlyAccess
+6. Click "Add permissions"
+
+#### Step 4.4: Get Identity Pool ID
+
+1. Go back to Cognito → Federated identities
+2. Click on "mindcare_identity_pool"
+3. Click "Edit identity pool" (top right)
+4. **IMPORTANT**: Copy the Identity Pool ID (e.g., `us-east-1:12345678-1234-1234-1234-123456789012`)
+
+**Verification**:
+- ✅ Identity pool "mindcare_identity_pool" created
+- ✅ Identity Pool ID copied
+- ✅ Authenticated role has S3 permissions
+
+---
+
+
+### SERVICE 5: AWS Secrets Manager
+
+**Purpose**: Securely store database credentials and API keys
+
+**Estimated Time**: 10 minutes
+
+**Region**: us-east-1
+
+#### Step 5.1: Create Database Credentials Secret
+
+1. Go to AWS Console → Search "Secrets Manager" → Click "AWS Secrets Manager"
+2. Click "Store a new secret" (orange button)
+3. **Secret type**:
+   - Select "Other type of secret"
+4. **Key/value pairs**:
+   - Click "Plaintext" tab
+   - Paste this JSON (replace with your actual values):
+```json
+{
+  "host": "your-database-host.rds.amazonaws.com",
+  "port": 3306,
+  "username": "admin",
+  "password": "YourSecurePassword123!",
+  "database": "mindcare"
+}
+```
+5. **Encryption key**:
+   - Select "aws/secretsmanager" (default)
+6. Click "Next"
+
+#### Step 5.2: Configure Secret
+
+1. **Secret name**: `mindcare/database/credentials`
+2. **Description**: "MindCare database connection credentials"
+3. **Tags** (optional):
+   - Key: `Project`, Value: `MindCare`
+   - Key: `Environment`, Value: `Production`
+4. Click "Next"
+
+#### Step 5.3: Configure Rotation (Optional)
+
+1. **Automatic rotation**: Disable for now (can enable later)
+2. Click "Next"
+
+#### Step 5.4: Review and Store
+
+1. Review all settings
+2. Click "Store"
+3. **IMPORTANT**: Copy the Secret ARN (you'll need it)
+
+#### Step 5.5: Create App Secrets
+
+1. Secrets Manager → "Store a new secret"
+2. **Secret type**: "Other type of secret"
+3. **Key/value pairs** (Plaintext):
+```json
+{
+  "jwt_secret": "your-random-jwt-secret-key-here-min-32-chars",
+  "api_key": "your-api-key-if-needed"
+}
+```
+4. **Secret name**: `mindcare/app-secrets`
+5. Click "Next" → "Next" → "Store"
+
+**Verification**:
+- ✅ Secret "mindcare/database/credentials" created
+- ✅ Secret "mindcare/app-secrets" created
+- ✅ Secret ARNs copied
+
+---
+
+### SERVICE 6: Amazon Aurora MySQL Serverless
+
+**Purpose**: Scalable database for application data
+
+**Estimated Time**: 20 minutes
+
+**Region**: us-east-1
+
+#### Step 6.1: Create Database Subnet Group
+
+1. Go to AWS Console → Search "RDS" → Click "RDS"
+2. Left sidebar → "Subnet groups"
+3. Click "Create DB subnet group"
+4. **Subnet group details**:
+   - Name: `mindcare-db-subnet-group`
+   - Description: "Subnet group for MindCare database"
+   - VPC: Select your default VPC
+5. **Add subnets**:
+   - Availability Zones: Select at least 2 AZs (e.g., us-east-1a, us-east-1b)
+   - Subnets: Select subnets in those AZs
+6. Click "Create"
+
+#### Step 6.2: Create Security Group
+
+1. Go to EC2 Console → Left sidebar → "Security Groups"
+2. Click "Create security group"
+3. **Basic details**:
+   - Security group name: `mindcare-db-sg`
+   - Description: "Security group for MindCare database"
+   - VPC: Select your default VPC
+4. **Inbound rules**:
+   - Click "Add rule"
+   - Type: "MySQL/Aurora"
+   - Port: 3306
+   - Source: "Custom" → Select Lambda security group (or 0.0.0.0/0 for testing)
+5. **Outbound rules**: Leave default (all traffic)
+6. Click "Create security group"
+
+#### Step 6.3: Create Aurora Serverless v2 Cluster
+
+1. RDS Console → Click "Create database"
+2. **Engine options**:
+   - Engine type: "Aurora (MySQL Compatible)"
+   - Edition: "Aurora (MySQL 8.0.mysql_aurora.3.04.0)"
+   - Engine version: Latest available
+3. **Templates**:
+   - Select "Production" (or "Dev/Test" for lower cost)
+4. **Settings**:
+   - DB cluster identifier: `mindcare-aurora-cluster`
+   - Master username: `admin`
+   - Master password: Create a strong password (save it!)
+   - Confirm password
+5. **Instance configuration**:
+   - DB instance class: "Serverless v2"
+   - Minimum ACUs: 0.5
+   - Maximum ACUs: 2 (adjust based on needs)
+6. **Availability & durability**:
+   - Multi-AZ deployment: ✅ "Create an Aurora Replica in a different AZ"
+7. **Connectivity**:
+   - VPC: Default VPC
+   - DB subnet group: `mindcare-db-subnet-group`
+   - Public access: "No" (recommended)
+   - VPC security group: Select `mindcare-db-sg`
+8. **Database authentication**:
+   - Database authentication options: "Password authentication"
+9. **Additional configuration**:
+   - Initial database name: `mindcare`
+   - DB cluster parameter group: default
+   - Backup retention period: 7 days
+   - Enable encryption: ✅ Yes
+   - Encryption key: (default) aws/rds
+   - Enable Performance Insights: ✅ Yes (optional)
+   - Monitoring: Enhanced monitoring (optional)
+10. Click "Create database"
+
+**Wait**: Database creation takes 10-15 minutes
+
+#### Step 6.4: Get Database Endpoint
+
+1. RDS Console → "Databases"
+2. Click on "mindcare-aurora-cluster"
+3. **IMPORTANT**: Copy these values:
+   - Writer endpoint (e.g., `mindcare-aurora-cluster.cluster-xxx.us-east-1.rds.amazonaws.com`)
+   - Reader endpoint (optional, for read replicas)
+   - Port: 3306
+
+#### Step 6.5: Update Secrets Manager with Database Endpoint
+
+1. Go to Secrets Manager
+2. Click on "mindcare/database/credentials"
+3. Click "Retrieve secret value"
+4. Click "Edit"
+5. Update the "host" value with your Writer endpoint
+6. Click "Save"
+
+**Verification**:
+- ✅ Aurora cluster "mindcare-aurora-cluster" created
+- ✅ Database endpoint copied
+- ✅ Secrets Manager updated with endpoint
+- ✅ Security group allows MySQL access
+
+---
+
+### SERVICE 7: AWS Lambda Functions
+
+**Purpose**: Serverless backend functions for auth, chat, and voice
+
+**Estimated Time**: 30 minutes
+
+**Region**: us-east-1
+
+#### Step 7.1: Prepare Lambda Deployment Packages
+
+**On your local machine**:
 
 ```bash
 # Navigate to lambda-functions directory
@@ -433,658 +642,96 @@ cd lambda-functions
 npm install
 
 # Create deployment package for auth-handler
-zip -r auth-handler.zip auth-handler.js node_modules/
+zip -r auth-handler.zip auth-handler.js node_modules/ package.json
 
 # Create deployment package for chat-handler
-zip -r chat-handler.zip chat-handler.js node_modules/
+zip -r chat-handler.zip chat-handler.js node_modules/ package.json
 
 # Create deployment package for voice-handler
-zip -r voice-handler.zip voice-handler.js node_modules/
+zip -r voice-handler.zip voice-handler.js node_modules/ package.json
 ```
 
-### 5.3 Create Lambda Function #1 (Auth Handler)
+#### Step 7.2: Create Auth Handler Lambda
 
-1. Go to Lambda Console: https://console.aws.amazon.com/lambda
-2. **Region**: Verify you're in **us-east-1**
-3. Click "Create function"
+1. Go to AWS Console → Search "Lambda" → Click "Lambda"
+2. Click "Create function" (orange button)
+3. **Function options**:
+   - Select "Author from scratch"
+4. **Basic information**:
+   - Function name: `mindcare-auth-handler`
+   - Runtime: "Node.js 20.x"
+   - Architecture: "x86_64"
+5. **Permissions**:
+   - Execution role: "Use an existing role"
+   - Existing role: Select "MindCare-Lambda-Execution-Role"
+6. Click "Create function"
 
-**Function settings:**
-- **Function name**: `mindcare-auth-handler`
-- **Runtime**: Node.js 20.x
-- **Architecture**: x86_64
-- **Permissions**: 
-  - Execution role: "Use an existing role"
-  - Existing role: `MindCareLambdaExecutionRole`
-- Click "Create function"
+#### Step 7.3: Upload Auth Handler Code
 
-**Upload code:**
-1. In "Code" tab, click "Upload from"
-2. Select ".zip file"
+1. In the function page, scroll to "Code source"
+2. Click "Upload from" → ".zip file"
 3. Click "Upload"
 4. Select `auth-handler.zip`
 5. Click "Save"
 
-**Configure function:**
+#### Step 7.4: Configure Auth Handler
+
 1. Click "Configuration" tab
-2. Click "General configuration"
-3. Click "Edit"
-4. **Memory**: 512 MB
-5. **Timeout**: 30 seconds
-6. Click "Save"
-
-**Add environment variables:**
-1. Click "Configuration" tab
-2. Click "Environment variables"
-3. Click "Edit"
-4. Add these variables:
-
-| Key | Value |
-|-----|-------|
-| `AWS_REGION` | `us-east-1` |
-| `COGNITO_USER_POOL_ID` | Your User Pool ID (from Step 2.8) |
-| `COGNITO_CLIENT_ID` | Your Client ID (from Step 2.8) |
-
-5. Click "Save"
-
-### 5.4 Create Lambda Function #2 (Chat Handler)
-
-1. Go back to Lambda Console
-2. Click "Create function"
-
-**Function settings:**
-- **Function name**: `mindcare-chat-handler`
-- **Runtime**: Node.js 20.x
-- **Architecture**: x86_64
-- **Permissions**: Use existing role `MindCareLambdaExecutionRole`
-- Click "Create function"
-
-**Upload code:**
-1. Upload `chat-handler.zip`
-
-**Configure function:**
-1. **Memory**: 1024 MB
-2. **Timeout**: 60 seconds
-
-**Add environment variables:**
-
-| Key | Value |
-|-----|-------|
-| `AWS_REGION` | `us-east-1` |
-| `BEDROCK_MODEL_ID` | `anthropic.claude-3-sonnet-20240229-v1:0` |
-| `DB_HOST` | Your database host (add later in Step 8) |
-| `DB_PORT` | `3306` |
-| `DB_USER` | Your database user (add later) |
-| `DB_PASSWORD` | Your database password (add later) |
-| `DB_NAME` | `mindcare` |
-
-### 5.5 Create Lambda Function #3 (Voice Handler)
-
-1. Go back to Lambda Console
-2. Click "Create function"
-
-**Function settings:**
-- **Function name**: `mindcare-voice-handler`
-- **Runtime**: Node.js 20.x
-- **Architecture**: x86_64
-- **Permissions**: Use existing role `MindCareLambdaExecutionRole`
-- Click "Create function"
-
-**Upload code:**
-1. Upload `voice-handler.zip`
-
-**Configure function:**
-1. **Memory**: 1024 MB
-2. **Timeout**: 300 seconds (5 minutes)
-
-**Add environment variables:**
-
-| Key | Value |
-|-----|-------|
-| `AWS_REGION` | `us-east-1` |
-| `S3_AUDIO_BUCKET` | Your audio bucket name (from Step 3) |
-| `TRANSCRIBE_LANGUAGE_CODE` | `en-US` |
-| `POLLY_VOICE_ID` | `Joanna` |
-| `POLLY_ENGINE` | `neural` |
-
-✅ **Lambda Setup Complete!**
-
-**Note down your Lambda ARNs:**
-- Auth Handler ARN: `arn:aws:lambda:us-east-1:495124020251:function:mindcare-auth-handler`
-- Chat Handler ARN: `arn:aws:lambda:us-east-1:495124020251:function:mindcare-chat-handler`
-- Voice Handler ARN: `arn:aws:lambda:us-east-1:495124020251:function:mindcare-voice-handler`
-
----
-
-## STEP 6: Amazon API Gateway Setup (REST API)
-
-### 6.1 Create REST API
-
-1. Go to API Gateway Console: https://console.aws.amazon.com/apigateway
-2. **Region**: Verify you're in **us-east-1**
-3. Click "Create API"
-4. Find "REST API" (not Private)
-5. Click "Build"
-
-**API settings:**
-- **Choose the protocol**: REST
-- **Create new API**: New API
-- **API name**: `MindCareAPI`
-- **Description**: `REST API for MindCare mental health platform`
-- **Endpoint Type**: Regional
-- Click "Create API"
-
-### 6.2 Create Cognito Authorizer
-
-1. In left sidebar, click "Authorizers"
-2. Click "Create authorizer"
-
-**Authorizer settings:**
-- **Name**: `CognitoAuthorizer`
-- **Type**: Cognito
-- **Cognito User Pool**: Select your user pool `mindcare-users`
-- **Token Source**: `Authorization`
-- **Token Validation**: Leave empty
-- Click "Create authorizer"
-
-### 6.3 Create Resources and Methods
-
-**Create /auth resource:**
-1. Click "Resources" in left sidebar
-2. Click "Actions" → "Create Resource"
-3. **Resource Name**: `auth`
-4. **Resource Path**: `auth`
-5. ☑ Enable API Gateway CORS
-6. Click "Create Resource"
-
-**Create /auth/validate method:**
-1. Select `/auth` resource
-2. Click "Actions" → "Create Method"
-3. Select "POST" from dropdown
-4. Click checkmark ✓
-
-**Configure POST method:**
-- **Integration type**: Lambda Function
-- **Use Lambda Proxy integration**: ☑ Yes
-- **Lambda Region**: us-east-1
-- **Lambda Function**: `mindcare-auth-handler`
-- Click "Save"
-- Click "OK" to give API Gateway permission
-
-**Create /auth/user method:**
-1. Select `/auth` resource
-2. Click "Actions" → "Create Method"
-3. Select "GET"
-4. Configure same as above (Lambda: `mindcare-auth-handler`)
-
-**Add Authorization to GET:**
-1. Click on "GET" method under `/auth`
-2. Click "Method Request"
-3. Click pencil icon next to "Authorization"
-4. Select "CognitoAuthorizer"
-5. Click checkmark ✓
-
-**Create /chat resource:**
-1. Click "/" (root)
-2. Click "Actions" → "Create Resource"
-3. **Resource Name**: `chat`
-4. ☑ Enable API Gateway CORS
-5. Click "Create Resource"
-
-**Create /chat/send method:**
-1. Select `/chat` resource
-2. Click "Actions" → "Create Method"
-3. Select "POST"
-4. **Lambda Function**: `mindcare-chat-handler`
-5. ☑ Use Lambda Proxy integration
-6. Click "Save"
-
-**Add Authorization:**
-1. Click "Method Request"
-2. Authorization: `CognitoAuthorizer`
-
-**Create /voice resource:**
-1. Click "/" (root)
-2. Click "Actions" → "Create Resource"
-3. **Resource Name**: `voice`
-4. ☑ Enable API Gateway CORS
-5. Click "Create Resource"
-
-**Create /voice/transcribe method:**
-1. Select `/voice` resource
-2. Create "POST" method
-3. **Lambda Function**: `mindcare-voice-handler`
-4. Authorization: `CognitoAuthorizer`
-
-**Create /voice/synthesize method:**
-1. Select `/voice` resource
-2. Create "POST" method
-3. **Lambda Function**: `mindcare-voice-handler`
-4. Authorization: `CognitoAuthorizer`
-
-### 6.4 Enable CORS for All Methods
-
-1. Select each resource (/auth, /chat, /voice)
-2. Click "Actions" → "Enable CORS"
-3. Keep default settings:
-   - Access-Control-Allow-Headers: `Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token`
-   - Access-Control-Allow-Methods: Select all
-   - Access-Control-Allow-Origin: `*`
-4. Click "Enable CORS and replace existing CORS headers"
-5. Click "Yes, replace existing values"
-
-### 6.5 Deploy API
-
-1. Click "Actions" → "Deploy API"
-2. **Deployment stage**: [New Stage]
-3. **Stage name**: `prod`
-4. **Stage description**: `Production environment`
-5. Click "Deploy"
-
-### 6.6 Note Down API Gateway URL
-
-After deployment, you'll see:
-- **Invoke URL**: `https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod`
-
-**Copy this URL - you'll need it for environment variables!**
-
-✅ **API Gateway Setup Complete!**
-
----
-
-## STEP 7: Aurora MySQL Serverless Setup (Database)
-
-### 7.1 Create Database Subnet Group
-
-1. Go to RDS Console: https://console.aws.amazon.com/rds
-2. **Region**: Verify you're in **us-east-1**
-3. Click "Subnet groups" in left sidebar
-4. Click "Create DB subnet group"
-
-**Subnet group settings:**
-- **Name**: `mindcare-db-subnet-group`
-- **Description**: `Subnet group for MindCare database`
-- **VPC**: Select your default VPC
-- **Availability Zones**: Select at least 2 AZs (us-east-1a, us-east-1b)
-- **Subnets**: Select subnets from the selected AZs
-- Click "Create"
-
-### 7.2 Create Aurora Serverless v2 Cluster
-
-1. Go back to RDS Console
-2. Click "Databases" in left sidebar
-3. Click "Create database"
-
-**Engine options:**
-- **Engine type**: Aurora (MySQL Compatible)
-- **Edition**: Aurora (MySQL 8.0)
-- **Engine version**: Aurora MySQL 3.04.0 (compatible with MySQL 8.0.28)
-
-**Templates:**
-- Select "Dev/Test" (cheaper for development)
-
-**Settings:**
-- **DB cluster identifier**: `mindcare-aurora-cluster`
-- **Master username**: `admin`
-- **Master password**: Create a strong password (save it!)
-- **Confirm password**: Re-enter password
-
-**Instance configuration:**
-- **DB instance class**: Serverless v2
-- **Minimum ACUs**: 0.5
-- **Maximum ACUs**: 2
-
-**Availability & durability:**
-- ☐ Don't create an Aurora Replica (uncheck for dev)
-
-**Connectivity:**
-- **Virtual private cloud (VPC)**: Default VPC
-- **DB subnet group**: `mindcare-db-subnet-group`
-- **Public access**: Yes (for development)
-- **VPC security group**: Create new
-  - **New VPC security group name**: `mindcare-db-sg`
-- **Availability Zone**: No preference
-
-**Database authentication:**
-- Select "Password authentication"
-
-**Additional configuration:**
-- **Initial database name**: `mindcare`
-- **DB cluster parameter group**: default.aurora-mysql8.0
-- **Backup retention period**: 7 days
-- **Enable encryption**: ☑ Yes
-- **Enable Enhanced monitoring**: ☐ No (to save costs)
-- **Enable deletion protection**: ☐ No (for development)
-
-Click "Create database"
-
-**Wait 5-10 minutes for creation**
-
-### 7.3 Configure Security Group
-
-1. After database is created, click on cluster name
-2. Click on "Connectivity & security" tab
-3. Click on the security group link (e.g., `mindcare-db-sg`)
-4. Click "Edit inbound rules"
-5. Click "Add rule"
-
-**Rule settings:**
-- **Type**: MySQL/Aurora
-- **Protocol**: TCP
-- **Port**: 3306
-- **Source**: My IP (for development)
-  - Or "Anywhere-IPv4" (0.0.0.0/0) - less secure but easier
-
-6. Click "Save rules"
-
-### 7.4 Note Down Database Endpoint
-
-1. Go back to RDS Console
-2. Click on your cluster `mindcare-aurora-cluster`
-3. **Writer endpoint**: Copy this (format: `mindcare-aurora-cluster.cluster-xxxxx.us-east-1.rds.amazonaws.com`)
-
-### 7.5 Run Database Migrations
-
-**Option 1: Using MySQL Workbench (GUI)**
-1. Download MySQL Workbench: https://dev.mysql.com/downloads/workbench/
-2. Open MySQL Workbench
-3. Click "+" to create new connection
-4. **Connection Name**: MindCare Aurora
-5. **Hostname**: Your writer endpoint
-6. **Port**: 3306
-7. **Username**: admin
-8. **Password**: Click "Store in Keychain" and enter your password
-9. Click "Test Connection"
-10. Click "OK"
-11. Double-click the connection
-12. Click "File" → "Open SQL Script"
-13. Select `server/db/migrations.sql`
-14. Click "Execute" (lightning bolt icon)
-15. Verify all tables are created
-
-**Option 2: Using MySQL CLI**
-```bash
-mysql -h mindcare-aurora-cluster.cluster-xxxxx.us-east-1.rds.amazonaws.com \
-  -u admin \
-  -p \
-  mindcare < server/db/migrations.sql
-```
-
-### 7.6 Verify Tables Created
-
-Run this query:
-```sql
-SHOW TABLES;
-```
-
-You should see:
-- chat_messages
-- counsellor_groups
-- counsellor_sessions
-- daily_analytics
-- group_members
-- journal_entries
-- mood_check_ins
-- rewards
-- user_points
-- user_rewards
-- wellness_activities
-- user_dashboard_summary (view)
-- counsellor_dashboard_summary (view)
-
-✅ **Aurora MySQL Setup Complete!**
-
----
-
-## STEP 8: CloudWatch Setup (Monitoring & Logging)
-
-### 8.1 Create Log Group
-
-1. Go to CloudWatch Console: https://console.aws.amazon.com/cloudwatch
-2. **Region**: Verify you're in **us-east-1**
-3. Click "Log groups" in left sidebar
-4. Click "Create log group"
-5. **Log group name**: `/mindcare/application`
-6. **Retention setting**: 7 days (to save costs)
-7. Click "Create"
-
-### 8.2 Verify Lambda Logs
-
-1. Go to "Log groups"
-2. You should see these log groups (auto-created by Lambda):
-   - `/aws/lambda/mindcare-auth-handler`
-   - `/aws/lambda/mindcare-chat-handler`
-   - `/aws/lambda/mindcare-voice-handler`
-
-### 8.3 Create CloudWatch Dashboard
-
-1. Click "Dashboards" in left sidebar
-2. Click "Create dashboard"
-3. **Dashboard name**: `MindCare-Monitoring`
-4. Click "Create dashboard"
-
-**Add Lambda Metrics Widget:**
-1. Click "Add widget"
-2. Select "Line"
-3. Click "Metrics"
-4. Click "Lambda"
-5. Click "By Function Name"
-6. Select these metrics for all 3 functions:
-   - Invocations
-   - Errors
-   - Duration
-7. Click "Create widget"
-
-**Add API Gateway Metrics Widget:**
-1. Click "Add widget"
-2. Select "Line"
-3. Click "Metrics"
-4. Click "API Gateway"
-5. Click "By API Name"
-6. Select:
-   - Count (requests)
-   - 4XXError
-   - 5XXError
-   - Latency
-7. Click "Create widget"
-
-8. Click "Save dashboard"
-
-### 8.4 Create Alarms (Optional)
-
-**High Error Rate Alarm:**
-1. Click "Alarms" in left sidebar
-2. Click "Create alarm"
-3. Click "Select metric"
-4. Click "Lambda" → "By Function Name"
-5. Select "Errors" for `mindcare-chat-handler`
-6. Click "Select metric"
-7. **Statistic**: Sum
-8. **Period**: 5 minutes
-9. **Threshold**: Static
-10. **Greater than**: 10
-11. Click "Next"
-12. **Alarm name**: `MindCare-HighErrorRate`
-13. Click "Create alarm"
-
-✅ **CloudWatch Setup Complete!**
-
----
-
-## STEP 9: CloudFront Setup (CDN) - Optional
-
-### 9.1 Create CloudFront Distribution
-
-1. Go to CloudFront Console: https://console.aws.amazon.com/cloudfront
-2. Click "Create distribution"
-
-**Origin settings:**
-- **Origin domain**: Your Amplify domain (add after Amplify setup)
-- **Protocol**: HTTPS only
-- **Name**: Leave default
-
-**Default cache behavior:**
-- **Viewer protocol policy**: Redirect HTTP to HTTPS
-- **Allowed HTTP methods**: GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE
-- **Cache policy**: CachingOptimized
-
-**Settings:**
-- **Price class**: Use only North America and Europe
-- **Alternate domain name (CNAME)**: Leave empty (or add your custom domain)
-- **Custom SSL certificate**: Default CloudFront certificate
-
-Click "Create distribution"
-
-**Wait 10-15 minutes for deployment**
-
-✅ **CloudFront Setup Complete!**
-
----
-
-## STEP 10: Update Environment Variables
-
-### 10.1 Update Frontend .env File
-
-Open `.env` file in your project root and update:
-
-```env
-# AWS Credentials (Already configured)
-VITE_AWS_ACCESS_KEY_ID=AKIAXGR5Q7QN6N6LFHTF
-VITE_AWS_SECRET_ACCESS_KEY=fW4EugBT9dbHTHVVzHKgGdD5tBWowy8G12brY2hH
-VITE_AWS_REGION=us-east-1
-VITE_AWS_ACCOUNT_ID=495124020251
-
-# Amazon Cognito (UPDATE THESE)
-VITE_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX  # From Step 2.8
-VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx  # From Step 2.8
-VITE_COGNITO_IDENTITY_POOL_ID=us-east-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # From Step 2.9
-
-# API Gateway (UPDATE THIS)
-VITE_API_GATEWAY_URL=https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod  # From Step 6.6
-
-# Amazon S3 Buckets (UPDATE THESE)
-VITE_S3_BUCKET=mindcare-user-content  # From Step 3
-VITE_S3_AUDIO_BUCKET=mindcare-audio-uploads  # From Step 3
-VITE_S3_USER_CONTENT_BUCKET=mindcare-user-content  # From Step 3
-
-# AWS Secrets Manager
-VITE_DB_SECRET_NAME=mindcare/database/credentials
-VITE_API_SECRET_NAME=mindcare/api/keys
-
-# CloudFront Distribution (Optional)
-VITE_CLOUDFRONT_DOMAIN=d1234567890.cloudfront.net  # From Step 9 (if created)
-
-# Local Development
-VITE_LOCAL_API_URL=http://localhost:8083
-```
-
-### 10.2 Update Lambda Environment Variables
-
-**Update chat-handler Lambda:**
-1. Go to Lambda Console
-2. Click `mindcare-chat-handler`
-3. Click "Configuration" → "Environment variables"
-4. Click "Edit"
-5. Update these variables:
-
-| Key | Value |
-|-----|-------|
-| `DB_HOST` | Your Aurora endpoint (from Step 7.4) |
-| `DB_USER` | `admin` |
-| `DB_PASSWORD` | Your database password (from Step 7.2) |
-| `DB_NAME` | `mindcare` |
-
-6. Click "Save"
-
-### 10.3 Create server/.env File (If Using Local Backend)
-
-Create `server/.env` file:
-
-```env
-# AWS Configuration
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=AKIAXGR5Q7QN6N6LFHTF
-AWS_SECRET_ACCESS_KEY=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
-AWS_ACCOUNT_ID=495124020251
-
-# Amazon Cognito
-COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX  # From Step 2.8
-COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx  # From Step 2.8
-
-# Amazon Bedrock
-BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
-
-# Amazon Transcribe
-TRANSCRIBE_LANGUAGE_CODE=en-US
-
-# Amazon Polly
-POLLY_VOICE_ID=Joanna
-POLLY_ENGINE=neural
-
-# Amazon S3
-S3_AUDIO_BUCKET=mindcare-audio-uploads  # From Step 3
-S3_USER_CONTENT_BUCKET=mindcare-user-content  # From Step 3
-
-# AWS Secrets Manager
-DB_SECRET_NAME=mindcare/database/credentials
-
-# Database (Aurora MySQL Serverless)
-DB_HOST=mindcare-aurora-cluster.cluster-xxxxx.us-east-1.rds.amazonaws.com  # From Step 7.4
-DB_PORT=3306
-DB_USER=admin
-DB_PASSWORD=your_password_here  # From Step 7.2
-DB_NAME=mindcare
-
-# Server Configuration
-PORT=8083
-NODE_ENV=development
-
-# API Security
-API_KEY_SECRET=your_random_secret_here
-JWT_SECRET=your_random_jwt_secret_here
-
-# CORS
-CORS_ORIGIN=http://localhost:5173
-
-# CloudWatch Logging
-CLOUDWATCH_LOG_GROUP=/mindcare/application
-CLOUDWATCH_LOG_STREAM=backend-api
-```
-
-✅ **Environment Variables Updated!**
-
----
-
-## STEP 11: Testing & Verification
-
-### 11.1 Test Cognito Authentication
-
-**Using AWS Console:**
-1. Go to Cognito Console
-2. Click on your user pool
-3. Click "Users" tab
-4. Click "Create user"
-5. **Username**: `test@example.com`
-6. **Email**: `test@example.com`
-7. **Temporary password**: `Test@1234`
-8. ☑ Mark email as verified
-9. Click "Create user"
-
-**Test login from your app:**
-1. Start your frontend: `npm run dev`
-2. Go to http://localhost:5173
-3. Click "Sign In"
-4. Enter email and password
-5. You should be redirected to dashboard
-
-### 11.2 Test Lambda Functions
-
-**Test auth-handler:**
-1. Go to Lambda Console
-2. Click `mindcare-auth-handler`
-3. Click "Test" tab
-4. Click "Create new event"
-5. **Event name**: `test-validate`
-6. **Event JSON**:
+2. Click "General configuration" → "Edit"
+   - Memory: 512 MB
+   - Timeout: 30 seconds
+   - Click "Save"
+3. Click "Environment variables" → "Edit"
+   - Add these variables:
+     - `AWS_REGION`: `us-east-1`
+     - `COGNITO_USER_POOL_ID`: Your User Pool ID
+   - Click "Save"
+
+#### Step 7.5: Create Chat Handler Lambda
+
+1. Lambda Console → "Create function"
+2. **Basic information**:
+   - Function name: `mindcare-chat-handler`
+   - Runtime: "Node.js 20.x"
+   - Execution role: "MindCare-Lambda-Execution-Role"
+3. Click "Create function"
+4. Upload `chat-handler.zip`
+5. **Configuration**:
+   - Memory: 1024 MB
+   - Timeout: 60 seconds
+6. **Environment variables**:
+   - `AWS_REGION`: `us-east-1`
+   - `BEDROCK_MODEL_ID`: `anthropic.claude-3-sonnet-20240229-v1:0`
+   - `DB_HOST`: Your Aurora endpoint
+   - `DB_PORT`: `3306`
+   - `DB_USER`: `admin`
+   - `DB_PASSWORD`: Your database password
+   - `DB_NAME`: `mindcare`
+
+#### Step 7.6: Create Voice Handler Lambda
+
+1. Lambda Console → "Create function"
+2. **Basic information**:
+   - Function name: `mindcare-voice-handler`
+   - Runtime: "Node.js 20.x"
+   - Execution role: "MindCare-Lambda-Execution-Role"
+3. Click "Create function"
+4. Upload `voice-handler.zip`
+5. **Configuration**:
+   - Memory: 1024 MB
+   - Timeout: 300 seconds (5 minutes)
+6. **Environment variables**:
+   - `AWS_REGION`: `us-east-1`
+   - `S3_AUDIO_BUCKET`: `mindcare-audio-uploads-495124020251`
+   - `TRANSCRIBE_LANGUAGE_CODE`: `en-US`
+
+#### Step 7.7: Test Lambda Functions
+
+**Test Auth Handler**:
+1. Click on `mindcare-auth-handler`
+2. Click "Test" tab
+3. Event name: `test-validate`
+4. Event JSON:
 ```json
 {
   "httpMethod": "POST",
@@ -1092,139 +739,619 @@ CLOUDWATCH_LOG_STREAM=backend-api
   "body": "{\"token\":\"test-token\"}"
 }
 ```
-7. Click "Test"
-8. Check response (should return validation result)
+5. Click "Test"
+6. Check response (should return validation result)
 
-### 11.3 Test API Gateway
-
-**Using curl:**
-```bash
-# Test auth endpoint
-curl -X POST https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/prod/auth/validate \
-  -H "Content-Type: application/json" \
-  -d '{"token":"test-token"}'
-```
-
-### 11.4 Test S3 Upload
-
-**Using AWS Console:**
-1. Go to S3 Console
-2. Click on `mindcare-audio-uploads`
-3. Click "Upload"
-4. Select a test audio file
-5. Click "Upload"
-6. Verify file appears in bucket
-
-### 11.5 Test Bedrock
-
-**Using AWS Console:**
-1. Go to Bedrock Console
-2. Click "Playgrounds" → "Chat"
-3. Select "Claude 3 Sonnet"
-4. Type: "Hello"
-5. Click "Run"
-6. Verify you get a response
-
-### 11.6 Test Database Connection
-
-**Using MySQL Workbench:**
-1. Connect to your Aurora database
-2. Run query:
-```sql
-SELECT * FROM mood_check_ins LIMIT 1;
-```
-3. Should return empty result (no error)
-
-### 11.7 Test Complete Flow
-
-1. Start frontend: `npm run dev`
-2. Sign up new user
-3. Verify email (check Cognito console)
-4. Sign in
-5. Go to AI Chatbot
-6. Send a message
-7. Verify response from Claude
-8. Check CloudWatch logs for Lambda invocations
-
-✅ **All Tests Complete!**
+**Verification**:
+- ✅ mindcare-auth-handler created and tested
+- ✅ mindcare-chat-handler created
+- ✅ mindcare-voice-handler created
+- ✅ All functions have correct environment variables
+- ✅ Copy all Lambda ARNs (you'll need them)
 
 ---
 
-## STEP 12: Deploy to Production (Optional)
+### SERVICE 8: Amazon API Gateway
 
-### 12.1 Deploy Frontend to Amplify
+**Purpose**: REST API to expose Lambda functions
 
-1. Go to Amplify Console: https://console.aws.amazon.com/amplify
-2. Click "New app" → "Host web app"
-3. Select "GitHub" (or your Git provider)
-4. Authorize Amplify to access your repository
-5. Select your repository and branch
-6. **Build settings**: Auto-detected (Vite)
-7. **Environment variables**: Add all VITE_* variables from .env
-8. Click "Save and deploy"
-9. Wait for deployment (5-10 minutes)
-10. Note down Amplify URL
+**Estimated Time**: 20 minutes
 
-### 12.2 Update CORS Settings
-
-Update S3 CORS to include Amplify URL:
-```json
-{
-    "AllowedOrigins": [
-        "http://localhost:5173",
-        "https://YOUR_AMPLIFY_URL.amplifyapp.com"
-    ]
-}
-```
-
-Update API Gateway CORS similarly.
-
-✅ **Production Deployment Complete!**
-
----
-
-## 📋 Summary Checklist
-
-- [ ] AWS Account setup
-- [ ] IAM user verified
-- [ ] Cognito User Pool created
-- [ ] Cognito Identity Pool created
-- [ ] S3 buckets created (2)
-- [ ] S3 CORS configured
-- [ ] Bedrock model access enabled
-- [ ] Lambda IAM role created
-- [ ] Lambda functions created (3)
-- [ ] Lambda environment variables set
-- [ ] API Gateway created
-- [ ] API Gateway deployed
-- [ ] Aurora MySQL cluster created
-- [ ] Database migrations run
-- [ ] CloudWatch log groups created
-- [ ] CloudWatch dashboard created
-- [ ] Environment variables updated
-- [ ] All tests passed
-
----
-
-## 🎉 Congratulations!
-
-Your AWS infrastructure is now fully set up and ready to use!
-
-**Next Steps:**
-1. Start your frontend: `npm run dev`
-2. Test all features
-3. Monitor CloudWatch for any errors
-4. Deploy to production when ready
-
-**Important URLs to Save:**
-- AWS Console: https://console.aws.amazon.com
-- Cognito User Pool: [Your User Pool ID]
-- API Gateway: [Your API URL]
-- Aurora Endpoint: [Your DB Endpoint]
-- CloudWatch Dashboard: [Your Dashboard URL]
-
----
-
-**Setup Time**: 2-4 hours
-**Status**: ✅ Complete
 **Region**: us-east-1
+
+#### Step 8.1: Create REST API
+
+1. Go to AWS Console → Search "API Gateway" → Click "API Gateway"
+2. Click "Create API"
+3. **Choose API type**:
+   - Select "REST API" (not Private or HTTP API)
+   - Click "Build"
+4. **Create new API**:
+   - Select "New API"
+   - API name: `MindCare-API`
+   - Description: "REST API for MindCare platform"
+   - Endpoint Type: "Regional"
+5. Click "Create API"
+
+#### Step 8.2: Create Cognito Authorizer
+
+1. In API Gateway console, left sidebar → "Authorizers"
+2. Click "Create New Authorizer"
+3. **Authorizer settings**:
+   - Name: `CognitoAuthorizer`
+   - Type: "Cognito"
+   - Cognito User Pool: Select "mindcare-users"
+   - Token Source: `Authorization`
+   - Token Validation: (leave blank)
+4. Click "Create"
+
+#### Step 8.3: Create Resources and Methods
+
+**Create /auth resource**:
+1. Left sidebar → "Resources"
+2. Click "Actions" → "Create Resource"
+3. Resource Name: `auth`
+4. Resource Path: `auth`
+5. ✅ Enable API Gateway CORS
+6. Click "Create Resource"
+
+**Create /auth/validate endpoint**:
+1. Select `/auth` resource
+2. Click "Actions" → "Create Resource"
+3. Resource Name: `validate`
+4. Click "Create Resource"
+5. Select `/auth/validate` resource
+6. Click "Actions" → "Create Method" → Select "POST" → Click checkmark
+7. **Setup**:
+   - Integration type: "Lambda Function"
+   - Use Lambda Proxy integration: ✅ Yes
+   - Lambda Region: us-east-1
+   - Lambda Function: `mindcare-auth-handler`
+   - Click "Save"
+   - Click "OK" to grant permissions
+
+**Create /auth/user endpoint**:
+1. Select `/auth` resource
+2. Click "Actions" → "Create Resource"
+3. Resource Name: `user`
+4. Click "Create Resource"
+5. Select `/auth/user` resource
+6. Create methods: GET, PUT, DELETE (repeat for each):
+   - Click "Actions" → "Create Method" → Select method → Checkmark
+   - Integration: Lambda Proxy → `mindcare-auth-handler`
+   - Click "Save"
+7. For each method:
+   - Click "Method Request"
+   - Authorization: Select "CognitoAuthorizer"
+   - Click checkmark
+
+**Create /chat resource and endpoints**:
+1. Click "Actions" → "Create Resource"
+2. Resource Name: `chat`, Enable CORS
+3. Create `/chat/send` (POST), `/chat/history` (GET), `/chat/clear` (DELETE)
+4. All methods:
+   - Integration: Lambda Proxy → `mindcare-chat-handler`
+   - Authorization: CognitoAuthorizer
+
+**Create /voice resource and endpoints**:
+1. Create Resource: `voice`, Enable CORS
+2. Create `/voice/transcribe` (POST), `/voice/transcribe/status` (GET), `/voice/synthesize` (POST)
+3. All methods:
+   - Integration: Lambda Proxy → `mindcare-voice-handler`
+   - Authorization: CognitoAuthorizer
+
+#### Step 8.4: Enable CORS
+
+1. For each resource (/auth, /auth/validate, /auth/user, /chat, /chat/send, etc.):
+   - Select the resource
+   - Click "Actions" → "Enable CORS"
+   - Access-Control-Allow-Origin: `*` (or specific domains)
+   - Click "Enable CORS and replace existing CORS headers"
+   - Click "Yes, replace existing values"
+
+#### Step 8.5: Deploy API
+
+1. Click "Actions" → "Deploy API"
+2. **Deployment stage**: [New Stage]
+3. Stage name: `prod`
+4. Stage description: "Production stage"
+5. Click "Deploy"
+6. **IMPORTANT**: Copy the "Invoke URL" (e.g., `https://abc123xyz.execute-api.us-east-1.amazonaws.com/prod`)
+
+**Verification**:
+- ✅ API "MindCare-API" created
+- ✅ Cognito authorizer configured
+- ✅ All endpoints created and linked to Lambda
+- ✅ CORS enabled
+- ✅ API deployed to prod stage
+- ✅ Invoke URL copied
+
+---
+
+
+### SERVICE 9: Amazon Bedrock Model Access
+
+**Purpose**: Enable access to Claude 3 Sonnet AI model
+
+**Estimated Time**: 5 minutes
+
+**Region**: us-east-1
+
+#### Step 9.1: Request Model Access
+
+1. Go to AWS Console → Search "Bedrock" → Click "Amazon Bedrock"
+2. Left sidebar → Click "Model access"
+3. Click "Manage model access" (orange button, top right)
+4. **Available models**:
+   - Scroll to find "Anthropic"
+   - Find "Claude 3 Sonnet"
+   - ✅ Check the box next to "Claude 3 Sonnet"
+5. Click "Request model access" (bottom right)
+6. **Wait**: Access is usually granted instantly (check status)
+
+#### Step 9.2: Verify Model Access
+
+1. Bedrock Console → "Model access"
+2. Check that "Claude 3 Sonnet" shows "Access granted" (green checkmark)
+3. **Model ID**: `anthropic.claude-3-sonnet-20240229-v1:0`
+
+**Verification**:
+- ✅ Claude 3 Sonnet access granted
+- ✅ Model ID confirmed
+
+---
+
+### SERVICE 10: Amazon CloudWatch
+
+**Purpose**: Logging and monitoring
+
+**Estimated Time**: 10 minutes
+
+**Region**: us-east-1
+
+#### Step 10.1: Create Log Groups
+
+1. Go to AWS Console → Search "CloudWatch" → Click "CloudWatch"
+2. Left sidebar → "Logs" → "Log groups"
+3. Click "Create log group"
+4. **Log group name**: `/mindcare/frontend`
+5. **Retention setting**: 7 days (or as needed)
+6. Click "Create"
+7. Repeat for:
+   - `/mindcare/backend`
+   - `/aws/lambda/mindcare-auth-handler` (auto-created by Lambda)
+   - `/aws/lambda/mindcare-chat-handler` (auto-created by Lambda)
+   - `/aws/lambda/mindcare-voice-handler` (auto-created by Lambda)
+
+#### Step 10.2: Create Dashboard
+
+1. Left sidebar → "Dashboards"
+2. Click "Create dashboard"
+3. Dashboard name: `MindCare-Dashboard`
+4. Click "Create dashboard"
+5. **Add widgets**:
+   - Click "Add widget"
+   - Select "Line" → "Metrics"
+   - Select "Lambda" → "By Function Name"
+   - Select metrics for all 3 Lambda functions:
+     - Invocations
+     - Errors
+     - Duration
+   - Click "Create widget"
+6. Add more widgets as needed (API Gateway requests, S3 operations, etc.)
+7. Click "Save dashboard"
+
+#### Step 10.3: Create Alarms
+
+**Lambda Error Alarm**:
+1. Left sidebar → "Alarms" → "All alarms"
+2. Click "Create alarm"
+3. Click "Select metric"
+4. Select "Lambda" → "By Function Name"
+5. Select "Errors" for `mindcare-chat-handler`
+6. Click "Select metric"
+7. **Conditions**:
+   - Threshold type: Static
+   - Whenever Errors is: Greater than 10
+   - Datapoints: 1 out of 1
+8. Click "Next"
+9. **Notification**:
+   - Create new topic: `MindCare-Alerts`
+   - Email: your-email@example.com
+   - Click "Create topic"
+10. Click "Next"
+11. Alarm name: `MindCare-Lambda-Errors`
+12. Click "Next" → "Create alarm"
+13. **Check email** and confirm SNS subscription
+
+**Verification**:
+- ✅ Log groups created
+- ✅ Dashboard created
+- ✅ Alarms configured
+- ✅ SNS topic subscribed
+
+---
+
+### SERVICE 11: Amazon CloudFront
+
+**Purpose**: CDN for fast content delivery
+
+**Estimated Time**: 15 minutes
+
+**Region**: Global (managed from us-east-1)
+
+**Note**: CloudFront setup is typically done after Amplify deployment. For now, we'll prepare the configuration.
+
+#### Step 11.1: Create CloudFront Distribution (After Amplify)
+
+1. Go to AWS Console → Search "CloudFront" → Click "CloudFront"
+2. Click "Create distribution"
+3. **Origin settings**:
+   - Origin domain: Your Amplify domain (e.g., `main.d1234567890.amplifyapp.com`)
+   - Protocol: HTTPS only
+   - Name: `AmplifyOrigin`
+4. **Default cache behavior**:
+   - Viewer protocol policy: "Redirect HTTP to HTTPS"
+   - Allowed HTTP methods: GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE
+   - Cache policy: "CachingOptimized"
+   - Origin request policy: "AllViewer"
+5. **Settings**:
+   - Price class: "Use all edge locations (best performance)"
+   - Alternate domain names (CNAMEs): your-domain.com (if you have one)
+   - Custom SSL certificate: (select if you have ACM certificate)
+   - Default root object: `index.html`
+6. Click "Create distribution"
+
+**Wait**: Distribution deployment takes 10-15 minutes
+
+#### Step 11.2: Configure Custom Error Responses (for SPA)
+
+1. Click on your distribution
+2. Click "Error pages" tab
+3. Click "Create custom error response"
+4. **Error response 1**:
+   - HTTP error code: 403
+   - Customize error response: Yes
+   - Response page path: `/index.html`
+   - HTTP response code: 200
+   - Click "Create"
+5. **Error response 2**:
+   - HTTP error code: 404
+   - Response page path: `/index.html`
+   - HTTP response code: 200
+   - Click "Create"
+
+**Verification**:
+- ✅ CloudFront distribution created
+- ✅ Custom error responses configured
+- ✅ Distribution domain name copied
+
+---
+
+### SERVICE 12: AWS Amplify
+
+**Purpose**: Frontend hosting with CI/CD
+
+**Estimated Time**: 20 minutes
+
+**Region**: us-east-1
+
+#### Step 12.1: Prepare Frontend for Deployment
+
+**On your local machine**:
+
+1. Update `.env` with all AWS resource IDs:
+```bash
+VITE_AWS_REGION=us-east-1
+VITE_AWS_ACCESS_KEY_ID=AKIAXGR5Q7QN6N6LFHTF
+VITE_AWS_SECRET_ACCESS_KEY=fW4EugBT9dbHTHVVzHKgGdD5tBWowy8G12brY2hH
+VITE_AWS_ACCOUNT_ID=495124020251
+VITE_COGNITO_USER_POOL_ID=<YOUR_USER_POOL_ID>
+VITE_COGNITO_CLIENT_ID=<YOUR_CLIENT_ID>
+VITE_COGNITO_IDENTITY_POOL_ID=<YOUR_IDENTITY_POOL_ID>
+VITE_S3_AUDIO_BUCKET=mindcare-audio-uploads-495124020251
+VITE_S3_USER_CONTENT_BUCKET=mindcare-user-content-495124020251
+VITE_BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+VITE_TRANSCRIBE_LANGUAGE_CODE=en-US
+VITE_POLLY_VOICE_ID=Joanna
+VITE_API_GATEWAY_URL=<YOUR_API_GATEWAY_URL>
+VITE_SECRETS_MANAGER_SECRET_NAME=mindcare/app-secrets
+VITE_CLOUDWATCH_LOG_GROUP=/mindcare/frontend
+```
+
+2. Test build locally:
+```bash
+npm run build
+```
+
+3. Commit and push to GitHub (if using Git):
+```bash
+git add .
+git commit -m "Configure AWS resources"
+git push origin main
+```
+
+#### Step 12.2: Create Amplify App
+
+1. Go to AWS Console → Search "Amplify" → Click "AWS Amplify"
+2. Click "Get started" under "Amplify Hosting"
+3. **Get started with Amplify Hosting**:
+   - Select "Deploy without Git provider" (or connect GitHub if you have repo)
+   - Click "Continue"
+
+**Option A: Manual Deployment**:
+1. App name: `MindCare`
+2. Environment name: `production`
+3. Drag and drop your `dist` folder (after running `npm run build`)
+4. Click "Save and deploy"
+
+**Option B: GitHub Deployment** (Recommended):
+1. Select "GitHub"
+2. Click "Continue"
+3. Authorize AWS Amplify to access GitHub
+4. Select repository: `your-username/mindcare`
+5. Select branch: `main`
+6. Click "Next"
+7. **Build settings**:
+   - Build command: `npm run build`
+   - Base directory: (leave empty)
+   - Build output directory: `dist`
+8. **Environment variables**:
+   - Add all VITE_* variables from your .env
+9. Click "Next"
+10. Review and click "Save and deploy"
+
+**Wait**: First deployment takes 5-10 minutes
+
+#### Step 12.3: Configure Custom Domain (Optional)
+
+1. Click on your app in Amplify Console
+2. Left sidebar → "Domain management"
+3. Click "Add domain"
+4. Enter your domain: `mindcare.com`
+5. Follow DNS configuration instructions
+6. Click "Save"
+
+#### Step 12.4: Get Amplify URL
+
+1. Amplify Console → Click on your app
+2. **IMPORTANT**: Copy the Amplify URL (e.g., `https://main.d1234567890.amplifyapp.com`)
+
+**Verification**:
+- ✅ Amplify app created
+- ✅ Frontend deployed successfully
+- ✅ Amplify URL copied
+- ✅ App accessible in browser
+
+---
+
+## Environment Configuration
+
+### Frontend .env File
+
+Create/update `.env` in project root:
+
+```bash
+# AWS Configuration
+VITE_AWS_REGION=us-east-1
+VITE_AWS_ACCESS_KEY_ID=AKIAXGR5Q7QN6N6LFHTF
+VITE_AWS_SECRET_ACCESS_KEY=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
+VITE_AWS_ACCOUNT_ID=495124020251
+
+# Cognito (UPDATE THESE)
+VITE_COGNITO_USER_POOL_ID=us-east-1_ABC123XYZ
+VITE_COGNITO_CLIENT_ID=1a2b3c4d5e6f7g8h9i0j
+VITE_COGNITO_IDENTITY_POOL_ID=us-east-1:12345678-1234-1234-1234-123456789012
+
+# S3
+VITE_S3_AUDIO_BUCKET=mindcare-audio-uploads-495124020251
+VITE_S3_USER_CONTENT_BUCKET=mindcare-user-content-495124020251
+
+# Bedrock
+VITE_BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+
+# Transcribe
+VITE_TRANSCRIBE_LANGUAGE_CODE=en-US
+
+# Polly
+VITE_POLLY_VOICE_ID=Joanna
+
+# API Gateway (UPDATE THIS)
+VITE_API_GATEWAY_URL=https://abc123xyz.execute-api.us-east-1.amazonaws.com/prod
+
+# Secrets Manager
+VITE_SECRETS_MANAGER_SECRET_NAME=mindcare/app-secrets
+
+# CloudWatch
+VITE_CLOUDWATCH_LOG_GROUP=/mindcare/frontend
+```
+
+### Database Migration
+
+Run the database schema:
+
+```bash
+# Connect to Aurora database
+mysql -h mindcare-aurora-cluster.cluster-xxx.us-east-1.rds.amazonaws.com -u admin -p
+
+# Enter password when prompted
+
+# Run migrations
+source server/db/migrations.sql
+
+# Verify tables created
+SHOW TABLES;
+
+# Exit
+EXIT;
+```
+
+---
+
+## Testing & Verification
+
+### Test 1: Authentication Flow
+
+1. Open your Amplify URL in browser
+2. Click "Sign Up"
+3. Enter email and password
+4. Check email for verification code
+5. Enter verification code
+6. Sign in with credentials
+7. **Expected**: Successfully signed in, JWT token received
+
+### Test 2: AI Chat
+
+1. After signing in, navigate to Chat page
+2. Send a message: "Hello, how are you?"
+3. **Expected**: AI responds with mental health support message
+
+### Test 3: Voice Transcription
+
+1. Navigate to Voice page
+2. Record or upload an audio file
+3. Click "Transcribe"
+4. **Expected**: Transcription appears after processing
+
+### Test 4: Text-to-Speech
+
+1. Navigate to Voice page
+2. Enter text: "Hello, this is a test"
+3. Click "Generate Speech"
+4. **Expected**: Audio plays with synthesized speech
+
+### Test 5: File Upload
+
+1. Navigate to Profile page
+2. Upload a profile picture
+3. **Expected**: Image uploads to S3 and displays
+
+### Test 6: CloudWatch Logs
+
+1. Go to CloudWatch Console
+2. Check log groups for Lambda functions
+3. **Expected**: Logs appear for each API call
+
+---
+
+## Troubleshooting
+
+### Issue: Cognito Sign Up Fails
+
+**Symptoms**: "User pool does not exist" error
+
+**Solutions**:
+1. Verify User Pool ID in .env is correct
+2. Check region is us-east-1
+3. Verify Cognito User Pool exists in AWS Console
+4. Check IAM permissions for Cognito
+
+### Issue: API Gateway Returns 403
+
+**Symptoms**: "Missing Authentication Token" or "Forbidden"
+
+**Solutions**:
+1. Verify Cognito authorizer is configured
+2. Check JWT token is being sent in Authorization header
+3. Verify Lambda has correct permissions
+4. Check API Gateway CORS configuration
+5. Redeploy API Gateway
+
+### Issue: Bedrock Returns 403
+
+**Symptoms**: "Access Denied" when calling Bedrock
+
+**Solutions**:
+1. Verify Bedrock model access is granted
+2. Check Lambda IAM role has bedrock:InvokeModel permission
+3. Verify model ID is correct
+4. Check region is us-east-1
+
+### Issue: Lambda Timeout
+
+**Symptoms**: "Task timed out after X seconds"
+
+**Solutions**:
+1. Increase Lambda timeout (Configuration → General → Timeout)
+2. Optimize Lambda code
+3. Check database connection is not hanging
+4. Verify network connectivity
+
+### Issue: S3 Upload Fails
+
+**Symptoms**: "Access Denied" or CORS error
+
+**Solutions**:
+1. Verify S3 bucket CORS configuration
+2. Check IAM permissions for S3
+3. Verify bucket name in .env is correct
+4. Check bucket exists in us-east-1
+
+### Issue: Database Connection Fails
+
+**Symptoms**: "ECONNREFUSED" or "Access denied"
+
+**Solutions**:
+1. Verify Aurora endpoint in environment variables
+2. Check security group allows Lambda access
+3. Verify database credentials in Secrets Manager
+4. Check database is running (not paused)
+5. Verify Lambda is in same VPC as database (if using VPC)
+
+---
+
+## Cost Optimization Tips
+
+1. **Enable S3 Lifecycle Policies**: Delete old audio files after 30 days
+2. **Use Aurora Serverless v2**: Auto-scales based on usage
+3. **Set Lambda Reserved Concurrency**: Prevent runaway costs
+4. **Enable CloudWatch Log Retention**: Delete old logs after 7 days
+5. **Use CloudFront Caching**: Reduce origin requests
+6. **Monitor with Cost Explorer**: Set up budget alerts
+7. **Use Free Tier**: Cognito, Lambda, API Gateway have generous free tiers
+
+---
+
+## Security Best Practices
+
+1. **Rotate AWS Credentials**: Create new access keys, delete old ones
+2. **Enable MFA**: On root account and IAM users
+3. **Use Secrets Manager**: Never hardcode credentials
+4. **Enable CloudTrail**: Audit all API calls
+5. **Configure WAF**: Protect API Gateway from attacks
+6. **Use HTTPS Only**: Enforce TLS 1.2+
+7. **Implement Rate Limiting**: Prevent abuse
+8. **Regular Security Audits**: Use AWS Security Hub
+
+---
+
+## Next Steps
+
+1. ✅ All AWS resources created
+2. ✅ Environment variables configured
+3. ✅ Database migrated
+4. ✅ Application tested
+5. ⏳ Set up monitoring and alerts
+6. ⏳ Configure custom domain
+7. ⏳ Implement CI/CD pipeline
+8. ⏳ Load testing
+9. ⏳ Security hardening
+10. ⏳ Production launch
+
+---
+
+## Summary
+
+**Total Setup Time**: 2-4 hours
+
+**Services Configured**: 14 AWS services
+
+**Estimated Monthly Cost**: $20-50 (development), $190-485 (production with 1000 users)
+
+**Status**: ✅ Ready for production deployment
+
+---
+
+**Last Updated**: 2024
+**Region**: us-east-1 (US East - N. Virginia)
+**Version**: 1.0
