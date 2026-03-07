@@ -23,15 +23,17 @@ export interface TTSResponse {
 // Convert text to speech
 export const textToSpeech = async ({
   text,
-  voiceId = POLLY_CONFIG.voiceId,
-  engine = POLLY_CONFIG.engine as 'standard' | 'neural',
+  voiceId,
+  engine,
 }: TTSRequest): Promise<TTSResponse> => {
+  const selectedVoiceId = voiceId || POLLY_CONFIG.voiceId;
+  const selectedEngine = engine || (POLLY_CONFIG.engine as 'standard' | 'neural');
   try {
     const command = new SynthesizeSpeechCommand({
       Text: text,
       OutputFormat: 'mp3',
-      VoiceId: voiceId as any,
-      Engine: engine,
+      VoiceId: selectedVoiceId as any,
+      Engine: selectedEngine,
       LanguageCode: POLLY_CONFIG.languageCode as any,
       TextType: 'text',
     });

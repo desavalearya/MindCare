@@ -9,7 +9,6 @@ import { useUser } from "@/contexts/UserContext";
 import MoodCheckIn from "@/components/dashboard/MoodCheckIn";
 import AIChatbot from "@/components/dashboard/AIChatbot";
 import UpcomingMeets from "@/components/dashboard/UpcomingMeets";
-import SuggestedCounsellors from "@/components/dashboard/SuggestedCounsellors";
 import WellnessRecommendations from "@/components/dashboard/WellnessRecommendations";
 
 const UserDashboard = () => {
@@ -131,9 +130,8 @@ const UserDashboard = () => {
             </TabsContent>
 
             <TabsContent value="counsellor" className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="w-full">
                 <UpcomingMeets />
-                <SuggestedCounsellors />
               </div>
             </TabsContent>
 

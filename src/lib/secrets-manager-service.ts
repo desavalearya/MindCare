@@ -37,7 +37,10 @@ export const getSecret = async (secretName: string): Promise<SecretValue> => {
  * Get database credentials from Secrets Manager
  */
 export const getDatabaseCredentials = async () => {
-  const secretName = import.meta.env.VITE_DB_SECRET_NAME || 'mindcare/database/credentials';
+  const secretName = import.meta.env.VITE_DB_SECRET_NAME;
+  if (!secretName) {
+    throw new Error('VITE_DB_SECRET_NAME environment variable is not set');
+  }
   return getSecret(secretName);
 };
 
@@ -45,7 +48,10 @@ export const getDatabaseCredentials = async () => {
  * Get API keys from Secrets Manager
  */
 export const getApiKeys = async () => {
-  const secretName = import.meta.env.VITE_API_SECRET_NAME || 'mindcare/api/keys';
+  const secretName = import.meta.env.VITE_API_SECRET_NAME;
+  if (!secretName) {
+    throw new Error('VITE_API_SECRET_NAME environment variable is not set');
+  }
   return getSecret(secretName);
 };
 

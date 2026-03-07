@@ -27,11 +27,12 @@ export interface UploadResponse {
 export const uploadToS3 = async (
   file: File,
   key: string,
-  bucket: string = S3_BUCKETS.audioUploads
+  bucket?: string
 ): Promise<string | null> => {
+  const targetBucket = bucket || S3_BUCKETS.audioUploads;
   try {
     const command = new PutObjectCommand({
-      Bucket: bucket,
+      Bucket: targetBucket,
       Key: key,
       Body: file,
       ContentType: file.type,
@@ -40,7 +41,7 @@ export const uploadToS3 = async (
     await s3Client.send(command);
 
     // Return S3 URI
-    return `s3://${bucket}/${key}`;
+    return `s3://${targetBucket}/${key}`;
   } catch (error: any) {
     console.error('S3 upload error:', error);
     return null;
@@ -52,13 +53,14 @@ export const uploadFileWithProgress = async (
   file: File,
   key: string,
   onProgress?: (progress: number) => void,
-  bucket: string = S3_BUCKETS.userContent
+  bucket?: string
 ): Promise<UploadResponse> => {
+  const targetBucket = bucket || S3_BUCKETS.userContent;
   try {
     // For small files, upload directly
     if (file.size < 5 * 1024 * 1024) { // < 5MB
       const command = new PutObjectCommand({
-        Bucket: bucket,
+        Bucket: targetBucket,
         Key: key,
         Body: file,
         ContentType: file.type,
@@ -71,7 +73,7 @@ export const uploadFileWithProgress = async (
       return {
         success: true,
         key,
-        url: `https://${bucket}.s3.${AWS_REGION}.amazonaws.com/${key}`,
+        url: `https://${targetBucket}.s3.${AWS_REGION}.amazonaws.com/${key}`,
       };
     }
 
@@ -89,12 +91,13 @@ export const uploadFileWithProgress = async (
 // Get pre-signed URL for download
 export const getDownloadUrl = async (
   key: string,
-  bucket: string = S3_BUCKETS.userContent,
+  bucket?: string,
   expiresIn: number = 3600
 ): Promise<string | null> => {
+  const targetBucket = bucket || S3_BUCKETS.userContent;
   try {
     const command = new GetObjectCommand({
-      Bucket: bucket,
+      Bucket: targetBucket,
       Key: key,
     });
 
@@ -109,12 +112,13 @@ export const getDownloadUrl = async (
 // Get pre-signed URL for upload (client-side upload)
 export const getUploadUrl = async (
   key: string,
-  bucket: string = S3_BUCKETS.userContent,
+  bucket?: string,
   expiresIn: number = 3600
 ): Promise<string | null> => {
+  const targetBucket = bucket || S3_BUCKETS.userContent;
   try {
     const command = new PutObjectCommand({
-      Bucket: bucket,
+      Bucket: targetBucket,
       Key: key,
     });
 
@@ -129,11 +133,12 @@ export const getUploadUrl = async (
 // Delete file from S3
 export const deleteFromS3 = async (
   key: string,
-  bucket: string = S3_BUCKETS.userContent
+  bucket?: string
 ): Promise<boolean> => {
+  const targetBucket = bucket || S3_BUCKETS.userContent;
   try {
     const command = new DeleteObjectCommand({
-      Bucket: bucket,
+      Bucket: targetBucket,
       Key: key,
     });
 

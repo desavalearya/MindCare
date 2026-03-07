@@ -69,10 +69,10 @@ const UpcomingMeets = () => {
         </Badge>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {meetings.map((meet, idx) => (
-          <div key={idx} className="p-5 rounded-2xl bg-muted/20 border border-border/50 hover:border-primary/20 transition-all group shadow-none">
-            <div className="flex flex-col gap-4">
+          <div key={idx} className="p-5 rounded-2xl bg-muted/20 border border-border/50 hover:border-primary/20 transition-all group shadow-none flex flex-col justify-between h-full">
+            <div className="flex flex-col gap-4 h-full">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <h3 className="font-bold text-lg text-foreground mb-0.5 truncate">{meet.counsellor}</h3>
@@ -86,7 +86,7 @@ const UpcomingMeets = () => {
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-1">
+              <div className="grid grid-cols-2 gap-3 mt-auto pt-4">
                 <Button
                   className="bg-primary hover:bg-primary/90 text-white shadow-soft rounded-xl h-11 font-bold text-sm"
                   onClick={() => window.open("https://meet.google.com/mhu-eoab-rbe", "_blank")}
@@ -139,7 +139,7 @@ const UpcomingMeets = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </Card >
   );
 };
 

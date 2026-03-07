@@ -6,9 +6,9 @@ export const configureAmplify = () => {
   Amplify.configure({
     Auth: {
       Cognito: {
-        userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || '',
-        userPoolClientId: import.meta.env.VITE_COGNITO_CLIENT_ID || '',
-        identityPoolId: import.meta.env.VITE_COGNITO_IDENTITY_POOL_ID || '',
+        userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+        userPoolClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
+        identityPoolId: import.meta.env.VITE_COGNITO_IDENTITY_POOL_ID,
         loginWith: {
           email: true,
         },
@@ -34,27 +34,27 @@ export const configureAmplify = () => {
     API: {
       REST: {
         MindCareAPI: {
-          endpoint: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8083',
-          region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+          endpoint: import.meta.env.VITE_API_GATEWAY_URL,
+          region: import.meta.env.VITE_AWS_REGION,
         },
       },
     },
     Storage: {
       S3: {
-        bucket: import.meta.env.VITE_S3_BUCKET || '',
-        region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+        bucket: import.meta.env.VITE_S3_USER_CONTENT_BUCKET,
+        region: import.meta.env.VITE_AWS_REGION,
       },
     },
   });
 };
 
 // AWS Region Configuration
-export const AWS_REGION = import.meta.env.VITE_AWS_REGION || 'us-east-1';
+export const AWS_REGION = import.meta.env.VITE_AWS_REGION;
 
 // S3 Bucket Names
 export const S3_BUCKETS = {
-  audioUploads: import.meta.env.VITE_S3_AUDIO_BUCKET || 'mindcare-audio-uploads',
-  userContent: import.meta.env.VITE_S3_USER_CONTENT_BUCKET || 'mindcare-user-content',
+  audioUploads: import.meta.env.VITE_S3_AUDIO_BUCKET,
+  userContent: import.meta.env.VITE_S3_USER_CONTENT_BUCKET,
 };
 
 // Bedrock Configuration
