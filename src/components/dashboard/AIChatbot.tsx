@@ -7,6 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Bot, Sparkles, Heart, Zap, Mic, Square, Volume2 } from "lucide-react";
 import { useState, useRef } from "react";
 
+const API_BASE = "https://9qvo7crajh.execute-api.us-east-1.amazonaws.com";
+const USER_ID = "user-123";
+
 const AIChatbot = () => {
   const [messages, setMessages] = useState([
     { type: "bot", text: "Hi! I'm here to support you. How are you feeling today?" },
@@ -18,8 +21,6 @@ const AIChatbot = () => {
   const [isTyping, setIsTyping] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-
-  const API_BASE = '';
 
   const personas = {
     calm: { icon: Heart, label: "Calm", color: "primary" },
@@ -33,23 +34,24 @@ const AIChatbot = () => {
     setMessages((prev) => [...prev, { type: "user", text: userText }]);
     setInput("");
 
-    // Build conversation history for backend
-    const history = messages.map((m) => ({ role: m.type === "user" ? "User" : "AI", content: m.text }));
+    const conversationHistory = messages.map((m) => ({
+      role: m.type === "user" ? "user" : "assistant",
+      content: m.text,
+    }));
 
     try {
       setIsTyping(true);
-      const res = await fetch(`${API_BASE}/chat`, {
+      const res = await fetch(`${API_BASE}/chat/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText, history, tts: false }),
+        body: JSON.stringify({ userId: USER_ID, message: userText, conversationHistory }),
       });
       const data = await res.json();
-      const reply = data.reply || "Sorry, I couldn't respond right now.";
+      const reply = data.response || "Sorry, I couldn't respond right now.";
       setMessages((prev) => [...prev, { type: "bot", text: reply }]);
-    } catch (e) {
+    } catch {
       setMessages((prev) => [...prev, { type: "bot", text: "Network error. Please try again." }]);
-    }
-    finally {
+    } finally {
       setIsTyping(false);
     }
   };
@@ -72,7 +74,7 @@ const AIChatbot = () => {
       mediaRecorderRef.current = recorder;
       recorder.start();
       setIsRecording(true);
-    } catch (err) {
+    } catch {
       setIsRecording(false);
       setMessages((prev) => [...prev, { type: "bot", text: "Microphone access denied or unavailable." }]);
     }
@@ -80,44 +82,27 @@ const AIChatbot = () => {
 
   const stopRecording = () => {
     const rec = mediaRecorderRef.current;
-    if (rec && isRecording) {
-      rec.stop();
-    }
+    if (rec && isRecording) rec.stop();
   };
 
   const sendVoice = async (blob: Blob) => {
     setMessages((prev) => [...prev, { type: "user", text: "[Voice message]" }]);
-    try {
-      const fd = new FormData();
-      fd.append("audio", blob, "recording.webm");
-      const res = await fetch(`${API_BASE}/voice?tts=false`, { method: "POST", body: fd });
-      const data = await res.json();
-      const transcript = data.transcript || "";
-      const reply = data.reply || "Sorry, I couldn't respond right now.";
-      if (transcript) {
-        setMessages((prev) => [...prev, { type: "user", text: transcript }]);
-      }
-      setMessages((prev) => [...prev, { type: "bot", text: reply }]);
-    } catch (e) {
-      setMessages((prev) => [...prev, { type: "bot", text: "Voice processing failed. Please try again." }]);
-    }
+    await new Promise((r) => setTimeout(r, 500));
+    setMessages((prev) => [...prev, { type: "bot", text: "Voice messages are not supported yet. Please type your message." }]);
   };
 
   const speakText = async (text: string) => {
-    try {
-      const res = await fetch(`${API_BASE}/tts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) return;
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play().catch(() => { });
-    } catch (e) {
-      // do nothing
+    if ("speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
     }
+  };
+
+  const saveJournalEntry = async () => {
+    if (!journalEntry.trim()) return;
+    alert("Journal saving coming soon!");
   };
 
   const dailyPrompts = [
@@ -135,7 +120,6 @@ const AIChatbot = () => {
 
       <TabsContent value="chat">
         <Card className="p-6 shadow-soft border-border bg-card">
-          {/* Persona Selector */}
           <div className="mb-4">
             <p className="text-sm text-muted-foreground mb-3">Choose your companion's persona:</p>
             <div className="flex gap-2">
@@ -171,21 +155,14 @@ const AIChatbot = () => {
           <ScrollArea className="h-[400px] pr-4 mb-4">
             <div className="space-y-4">
               {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
-                >
+                <div key={idx} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.type === "user" ? (
-                    <div
-                      className={`max-w-[80%] p-3 rounded-2xl bg-primary/20 text-foreground rounded-br-sm`}
-                    >
+                    <div className="max-w-[80%] p-3 rounded-2xl bg-primary/20 text-foreground rounded-br-sm">
                       {msg.text}
                     </div>
                   ) : (
                     <div className="flex items-start gap-2">
-                      <div
-                        className={`max-w-[80%] p-3 rounded-2xl bg-secondary/20 text-foreground rounded-bl-sm`}
-                      >
+                      <div className="max-w-[80%] p-3 rounded-2xl bg-secondary/20 text-foreground rounded-bl-sm">
                         {msg.text}
                       </div>
                       <Button
@@ -255,7 +232,7 @@ const AIChatbot = () => {
               className="resize-none"
             />
             <div className="flex gap-2">
-              <Button className="flex-1">Save Entry</Button>
+              <Button className="flex-1" onClick={saveJournalEntry}>Save Entry</Button>
               <Button variant="outline">View Past Entries</Button>
             </div>
           </div>

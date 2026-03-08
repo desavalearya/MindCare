@@ -59,14 +59,22 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 404,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
+    , },
       body: JSON.stringify({ error: 'Route not found' }),
     };
   } catch (error) {
     console.error('Chat Handler Error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
+    , },
       body: JSON.stringify({ error: error.message }),
     };
   }
@@ -131,7 +139,11 @@ Always prioritize user safety and well-being.`;
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
+    , },
     body: JSON.stringify({
       response: aiResponse,
       timestamp: new Date().toISOString(),
@@ -156,7 +168,11 @@ async function getChatHistory({ userId, limit = 50 }) {
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
+    , },
     body: JSON.stringify({
       history: rows.reverse(), // Return in chronological order
     }),
@@ -176,7 +192,11 @@ async function clearChatHistory(userId) {
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
+    , },
     body: JSON.stringify({
       message: 'Chat history cleared successfully',
     }),

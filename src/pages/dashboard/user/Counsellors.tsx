@@ -9,10 +9,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Star, MessageCircle, Video, Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const Counsellors = () => {
   const { user } = useUser();
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
+
+  const handleReschedule = (meet: any) => {
+    setSelectedMeeting(meet);
+    setIsRescheduleOpen(true);
+  };
+
+  const confirmReschedule = () => {
+    toast.success(`Session with ${selectedMeeting?.counsellor} rescheduled to ${newDate} at ${newTime}`);
+    setIsRescheduleOpen(false);
+    setNewDate("");
+    setNewTime("");
+  };
 
   const suggestedCounsellors = [
     { name: "Dr. Sarah Miller", specialty: "Anxiety & Depression", rating: 4.9, sessions: 245, initials: "SM" },
@@ -59,7 +85,7 @@ const Counsellors = () => {
                     transition={{ delay: index * 0.1 }}
                   >
                     <Card className="p-6 shadow-soft border-border bg-card hover:shadow-gentle transition-smooth">
-                      <div className="flex items-start gap-4 mb-4">
+                      <div className="flex items-start gap-4">
                         <Avatar className="w-16 h-16">
                           <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
                             {counsellor.initials}
@@ -76,16 +102,6 @@ const Counsellors = () => {
                             <span className="text-muted-foreground">{counsellor.sessions} sessions</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button className="flex-1 gap-2">
-                          <Video className="w-4 h-4" />
-                          Book Video
-                        </Button>
-                        <Button variant="outline" className="flex-1 gap-2">
-                          <MessageCircle className="w-4 h-4" />
-                          Chat
-                        </Button>
                       </div>
                     </Card>
                   </motion.div>
@@ -119,24 +135,72 @@ const Counsellors = () => {
                           <Badge variant="secondary">{meet.type}</Badge>
                         </div>
                         <div className="flex gap-2 mt-3">
-                          <Button size="sm" className="flex-1">Join Session</Button>
-                          <Button size="sm" variant="outline">Reschedule</Button>
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => window.open("https://meet.google.com/mhu-eoab-rbe", "_blank")}
+                          >
+                            Join Session
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReschedule(meet)}
+                          >
+                            Reschedule
+                          </Button>
                         </div>
                       </motion.div>
                     ))}
                   </div>
                 </Card>
 
-                <Card className="p-6 shadow-soft border-border bg-card">
-                  <h2 className="text-xl font-semibold mb-4 text-foreground">Calendar</h2>
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="rounded-md border pointer-events-auto"
-                  />
+                <Card className="p-6 shadow-soft border-border bg-card flex flex-col items-center">
+                  <h2 className="text-xl font-semibold w-full text-left mb-4 text-foreground">Calendar</h2>
+                  <div className="w-full max-w-[300px] bg-background rounded-xl p-2 border border-border/50">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      className="pointer-events-auto"
+                    />
+                  </div>
                 </Card>
               </div>
+
+              <Dialog open={isRescheduleOpen} onOpenChange={setIsRescheduleOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Reschedule Session</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="date" className="text-right">Select Date</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        className="col-span-3"
+                        value={newDate}
+                        onChange={(e) => setNewDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="time" className="text-right">Select Time</Label>
+                      <Input
+                        id="time"
+                        type="time"
+                        className="col-span-3"
+                        value={newTime}
+                        onChange={(e) => setNewTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsRescheduleOpen(false)}>Cancel</Button>
+                    <Button onClick={confirmReschedule} disabled={!newDate || !newTime}>Confirm Reschedule</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
           </Tabs>
         </motion.div>

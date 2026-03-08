@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, LayoutDashboard, MessageCircle, Users, Shield, Music, TrendingUp, Settings, LogOut } from "lucide-react";
+import { Heart, LayoutDashboard, MessageCircle, Users, Shield, Music, TrendingUp, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
 
@@ -69,9 +69,8 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
               <Link key={item.path} to={item.path}>
                 <Button
                   variant={isActive ? "secondary" : "ghost"}
-                  className={`w-full justify-start transition-smooth ${
-                    isActive ? "bg-primary/10 text-primary" : ""
-                  }`}
+                  className={`w-full justify-start transition-smooth ${isActive ? "bg-primary/10 text-primary" : ""
+                    }`}
                 >
                   <item.icon className="w-5 h-5 mr-3" />
                   {item.label}
@@ -82,10 +81,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
         </nav>
 
         <div className="p-4 border-t border-border space-y-2">
-          <Button variant="ghost" className="w-full justify-start transition-smooth">
-            <Settings className="w-5 h-5 mr-3" />
-            Settings
-          </Button>
+
           <Button
             onClick={() => {
               logout();
