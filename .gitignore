@@ -1,32 +1,30 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Node.js
+# ============================================================
+# NODE / VITE
+# ============================================================
 node_modules/
 dist/
 dist-ssr/
 .vite/
 coverage/
 *.local
+build/
+out/
+*.tsbuildinfo
 
-# Environment files (CRITICAL - do not commit secrets!)
+# ============================================================
+# ENVIRONMENT FILES — NEVER COMMIT
+# ============================================================
 .env
 .env.*
-.env.local
-.env.development
-.env.production
-.env.test
+!.env.example         # safe to commit — contains only placeholder values
 server/.env
 server/.env.*
+!server/.env.example
 des/.env
 
-# AWS Credentials and Sensitive Files
+# ============================================================
+# AWS CREDENTIALS & SECRETS — NEVER COMMIT
+# ============================================================
 aws-credentials.json
 credentials.json
 *-credentials.json
@@ -34,18 +32,45 @@ credentials.json
 *.key
 *.cert
 
-# Lambda Deployment Packages
-lambda-functions/*.zip
-lambda-functions/node_modules/
-*.zip
+# ============================================================
+# INFRASTRUCTURE & TERRAFORM — contains account IDs / ARNs
+# ============================================================
+infrastructure/
+aws-infrastructure/
 
-# Database
+# ============================================================
+# LOG & RUNTIME OUTPUT FILES
+# ============================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+server_logs.txt
+server_errors.txt
+frontend_logs.txt
+frontend_errors.txt
+
+# ============================================================
+# DATABASE DUMPS & EXPORTS
+# ============================================================
 *.sql.backup
 *.db
 *.sqlite
 *.sqlite3
 
-# Python
+# ============================================================
+# CSV FILES — may contain user / emotion data
+# ============================================================
+*.csv
+emotion_log.csv
+des/emotion_log.csv
+
+# ============================================================
+# PYTHON ARTIFACTS
+# ============================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -58,66 +83,78 @@ venv/
 env/
 ENV/
 
-# Editors/OS
+# ============================================================
+# DOCUMENTATION FILES CONTAINING CREDENTIALS / SETUP GUIDES
+# These files contain real AWS keys, account IDs, passwords.
+# ============================================================
+AWS_COMPLETE_SETUP_GUIDE.md
+AWS_IMPLEMENTATION_STATUS.md
+AWS_KEYS_CONFIGURATION_GUIDE.md
+AWS_KEYS_QUICK_CHECKLIST.md
+AWS_MIGRATION_README.md
+TASK1_PROJECT_SUMMARY.md
+TASK2_DETAILED_AWS_SETUP_GUIDE.md
+TASK3_REQUIRED_KEYS_AND_IDS.md
+TASK4_JSON_FORMATS_FOR_AWS_SERVICES.md
+PASTE_HERE_VISUAL_GUIDE.md
+PASTE_YOUR_KEYS_HERE.md
+WHERE_TO_PASTE_KEYS.md
+SIMPLE_PASTE_GUIDE.md
+READY_TO_PUSH_SUMMARY.md
+GITHUB_PUSH_CHECKLIST.md
+GITHUB_PUSH_SECURITY_CHECKLIST.md
+SECURE_SETUP_GUIDE.md
+ENV_CONFIGURATION_FINAL_GUIDE.md
+IMPLEMENTATION_COMPLETE.md
+START_HERE.md
+QUICK_START_ENV_SETUP.md
+QUICK_REFERENCE.md
+ALL_TASKS_SUMMARY.md
+AMPLIFY_CUSTOM_DOMAIN_SETUP_GUIDE.md
+AMPLIFY_DEPLOYED_NEXT_STEPS.md
+AMPLIFY_SSL_STUCK_TROUBLESHOOTING.md
+ADD_DNS_VALIDATION_RECORDS_NOW.md
+FIX_SSL_CONFIGURATION_NOW.md
+VERIFY_DNS_RECORDS_TROUBLESHOOTING.md
+INTEGRATION_GUIDE.md
+BACKEND_CLEANUP_SUMMARY.md
+CODE_CHANGES_SUMMARY.md
+DATABASE_COMPLETE_SCHEMA_UPDATE.md
+DATABASE_SCHEMA_UPDATE.md
+AUTH_MIGRATION_SUMMARY.md
+FINAL_SETUP_SUMMARY.md
+MOOD_CHECKINS_UPDATE_SUMMARY.md
+TEMP_AUTH_SETUP.md
+PROJECT_NAME_UPDATE.md
+README_ENV_SETUP.md
+
+# ============================================================
+# EDITORS / OS
+# ============================================================
 .DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 *.swp
 *.swo
 *~
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
 .idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.vscode/*
+!.vscode/extensions.json
 
-# Build artifacts
-*.tsbuildinfo
-build/
-out/
-
-# Testing
-coverage/
-.nyc_output/
-*.lcov
-
-# Temporary files
+# ============================================================
+# MISC
+# ============================================================
 tmp/
 temp/
 *.tmp
 *.bak
 *.cache
-*.md
-
-# Lock files (optional - uncomment if you want to ignore)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-
-# Bun
-bun.lockb
-
-# MacOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
-*~
-.directory
-
-# Kiro (keep these for project management)
-# .kiro/
-
-# Documentation that contains sensitive info (if any)
-# Uncomment if you have docs with credentials
-# *CREDENTIALS*.md
-# *SECRETS*.md
+safe-push.bat
